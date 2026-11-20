@@ -15,6 +15,7 @@ const aoSair = (fn) => limpar.push(fn);
 
 const I = {
   marca: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#a8e05f"/><path d="M19 33.5l8.5 8.5L45 23.5" fill="none" stroke="#101508" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  esq: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
   seta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
   baixo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
   mais: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
@@ -146,9 +147,15 @@ function landing() {
   </section>
 
   <section class="sec" id="recursos" aria-labelledby="t-rec">
-    <div class="page sec-head rv"><span class="eyebrow">Recursos</span><h2 class="h2" id="t-rec">Feito para treinar<br><span class="dim">do jeito que cai.</span></h2></div>
+    <div class="page feats-head rv">
+      <div class="sec-head"><span class="eyebrow">Recursos</span><h2 class="h2" id="t-rec">Feito para treinar<br><span class="dim">do jeito que cai.</span></h2></div>
+      <div class="feats-ctrl" role="group" aria-label="Navegar pelos recursos">
+        <button class="seta" id="featsPrev" aria-label="Recurso anterior">${I.esq}</button>
+        <button class="seta" id="featsNext" aria-label="Próximo recurso">${I.seta}</button>
+      </div>
+    </div>
     <div class="feats-wrap rv" data-d="1">
-      <ul class="feats" id="feats">
+      <ul class="feats" id="feats" aria-roledescription="carrossel" aria-label="Recursos">
         ${feat(I.relogio, 'O tempo da prova real', 'O cronômetro não pausa e a prova fecha sozinha no fim, como no dia. Você aprende o seu ritmo antes de valer.', `
           <svg class="gauge" viewBox="0 0 260 170" aria-hidden="true"><path d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14" stroke-linecap="round"/>
           <path class="arco" pathLength="1" d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="#a8e05f" stroke-width="14" stroke-linecap="round"/>
@@ -168,7 +175,10 @@ function landing() {
         ${feat(I.cadeado, 'Seu progresso é seu', 'Sem conta e sem servidor: notas e histórico ficam só no seu navegador. Ninguém mais vê.', `
           <div class="cadeado"><div class="disp">${I.cadeado}</div><span>salvo só neste aparelho</span></div>`)}
       </ul>
-      <div class="page"><div class="feats-nav" id="featsNav">${Array.from({ length: 6 }, (_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div></div>
+      <div class="page feats-pe">
+        <div class="feats-nav" id="featsNav" role="tablist" aria-label="Escolher recurso">${Array.from({ length: 6 }, (_, i) => `<button role="tab" aria-label="Recurso ${i + 1}" aria-selected="${!i}"><i></i></button>`).join('')}</div>
+        <button class="auto" id="featsAuto" aria-pressed="true"><span class="ico-pausa" aria-hidden="true"></span><span class="txt">Pausar</span></button>
+      </div>
     </div>
   </section>
 
@@ -235,18 +245,54 @@ function cartaoProva(p, melhor, i) {
 }
 const feat = (ico, t, p, demo) => `<li class="feat"><div class="demo">${demo}</div><div class="txt"><div class="t"><span class="ico">${ico}</span><h3>${t}</h3></div><p>${p}</p></div></li>`;
 
+// carousel: arrows, clickable dots, mouse drag and autoplay. Autoplay advances one card
+// every 4.5 s, pauses on hover, focus, touch or manual navigation, and stays off for reduced motion.
 function ligarFeats() {
   const row = document.getElementById('feats'), nav = document.getElementById('featsNav'); if (!row) return;
-  row.querySelectorAll('.feat').forEach((c) => c.addEventListener('pointermove', (e) => { const r = c.getBoundingClientRect(); c.style.setProperty('--x', `${e.clientX - r.left}px`); c.style.setProperty('--y', `${e.clientY - r.top}px`); }));
-  const marcar = () => { const w = row.firstElementChild.getBoundingClientRect().width + 20, i = Math.round(row.scrollLeft / w); [...nav.children].forEach((b, k) => b.classList.toggle('on', k === Math.min(i, nav.children.length - 1))); };
+  const cards = [...row.children], dots = [...nav.children], prev = document.getElementById('featsPrev'), next = document.getElementById('featsNext'), auto = document.getElementById('featsAuto');
+  cards.forEach((c) => c.addEventListener('pointermove', (e) => { const r = c.getBoundingClientRect(); c.style.setProperty('--x', `${e.clientX - r.left}px`); c.style.setProperty('--y', `${e.clientY - r.top}px`); }));
+  const passo = () => cards[0].getBoundingClientRect().width + 20;
+  const fim = () => row.scrollLeft >= row.scrollWidth - row.clientWidth - 4;
+  // near the end the row cannot scroll a card to the left edge, so a chosen card is remembered explicitly
+  let escolhido = null;
+  const atual = () => (escolhido !== null ? escolhido : fim() ? cards.length - 1 : Math.round(row.scrollLeft / passo()));
+  const ir = (i, fixar = false) => { i = Math.max(0, Math.min(cards.length - 1, i)); escolhido = fixar ? i : null; marcar(); row.scrollTo({ left: i * passo(), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+  const marcar = () => {
+    const i = atual();
+    dots.forEach((d, k) => { d.setAttribute('aria-selected', String(k === i)); d.classList.toggle('on', k === i); });
+    prev.disabled = i === 0; next.disabled = i === cards.length - 1;
+    cards.forEach((c, k) => c.classList.toggle('ativo', k === i));
+  };
   row.addEventListener('scroll', marcar, { passive: true });
+  // a user scroll (wheel, touch, drag) drops the remembered card
+  ['wheel', 'touchmove'].forEach((ev) => row.addEventListener(ev, () => { escolhido = null; }, { passive: true }));
+  marcar();
+
+  let ligado = !matchMedia('(prefers-reduced-motion: reduce)').matches, emPausa = false, timer;
+  const mostrarAuto = () => { auto.setAttribute('aria-pressed', String(ligado)); auto.querySelector('.txt').textContent = ligado ? 'Pausar' : 'Reproduzir'; nav.classList.toggle('rodando', ligado && !emPausa); };
+  const agendar = () => { clearTimeout(timer); nav.style.setProperty('--dur', '4.5s'); mostrarAuto(); if (!ligado || emPausa) return; timer = setTimeout(() => { const i = atual(); ir(i >= cards.length - 1 ? 0 : i + 1, true); agendar(); }, 4500); };
+  const parar = () => { ligado = false; agendar(); };
+  prev.onclick = () => { parar(); ir(atual() - 1, true); };
+  next.onclick = () => { parar(); ir(atual() + 1, true); };
+  dots.forEach((d, k) => d.onclick = () => { parar(); ir(k, true); });
+  auto.onclick = () => { ligado = !ligado; agendar(); };
+  const pausa = (v) => () => { emPausa = v; agendar(); };
+  row.addEventListener('pointerenter', pausa(true)); row.addEventListener('pointerleave', pausa(false));
+  row.addEventListener('focusin', pausa(true)); row.addEventListener('focusout', pausa(false));
+  row.addEventListener('touchstart', parar, { passive: true });
+  row.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { parar(); ir(atual() + 1, true); } if (e.key === 'ArrowLeft') { parar(); ir(atual() - 1, true); } });
+  // only run while the section is on screen
+  const io = new IntersectionObserver(([e]) => { emPausa = !e.isIntersecting; agendar(); }, { threshold: .35 });
+  io.observe(row);
+  aoSair(() => { clearTimeout(timer); io.disconnect(); });
+
   // drag to scroll with the mouse, like the reference; snapping is off while dragging
-  let x0 = 0, s0 = 0, arrastando = false;
-  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; arrastando = true; x0 = e.clientX; s0 = row.scrollLeft; row.style.scrollSnapType = 'none'; row.style.cursor = 'grabbing'; });
-  addEventListener('pointermove', (e) => { if (arrastando) row.scrollLeft = s0 - (e.clientX - x0); });
-  const soltar = () => { if (!arrastando) return; arrastando = false; row.style.scrollSnapType = ''; row.style.cursor = ''; };
-  addEventListener('pointerup', soltar);
-  aoSair(() => removeEventListener('pointerup', soltar));
+  let x0 = 0, s0 = 0, arrastando = false, moveu = false;
+  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; escolhido = null; arrastando = true; moveu = false; x0 = e.clientX; s0 = row.scrollLeft; row.style.scrollSnapType = 'none'; row.style.scrollBehavior = 'auto'; });
+  const mover = (e) => { if (!arrastando) return; if (Math.abs(e.clientX - x0) > 4) { moveu = true; row.classList.add('arrastando'); } row.scrollLeft = s0 - (e.clientX - x0); };
+  const soltar = () => { if (!arrastando) return; arrastando = false; row.classList.remove('arrastando'); row.style.scrollBehavior = ''; if (moveu) { parar(); const i = atual(); row.style.scrollSnapType = ''; ir(i); } else row.style.scrollSnapType = ''; };
+  addEventListener('pointermove', mover); addEventListener('pointerup', soltar);
+  aoSair(() => { removeEventListener('pointermove', mover); removeEventListener('pointerup', soltar); });
 }
 function ligarAbas() {
   document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => {

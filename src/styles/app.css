@@ -177,9 +177,23 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 @media (max-width: 860px) { .provas { grid-template-columns: 1fr; } .breve { grid-template-columns: 1fr 1fr; } }
 
 /* ---------- feature cards: horizontal snap row, 352x496, cursor spotlight ---------- */
-.feats-wrap { margin-top: 48px; }
-.feats { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; padding: 4px max(24px, calc((100vw - var(--page)) / 2 + 24px)) 24px; scroll-padding-inline: max(24px, calc((100vw - var(--page)) / 2 + 24px)); list-style: none; margin: 0; }
+.feats-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+.feats-ctrl { display: flex; gap: 10px; flex: none; }
+.seta { width: 48px; height: 48px; border-radius: 999px; display: grid; place-items: center; background: var(--glass-layer); box-shadow: var(--shadow-glass); color: var(--text);
+  transition: background-color .14s var(--ease), opacity .2s var(--ease), scale .52s var(--ease); }
+.seta:hover:not(:disabled) { background: var(--raised-hover); }
+.seta:active:not(:disabled) { scale: .92; transition-duration: .14s, .2s, .11s; }
+.seta:disabled { opacity: .3; cursor: default; }
+.seta svg { width: 18px; height: 18px; }
+.feats-wrap { margin-top: 40px; }
+.feats { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; cursor: grab; overscroll-behavior-x: contain; scrollbar-width: none; padding: 4px max(24px, calc((100vw - var(--page)) / 2 + 24px)) 24px; scroll-padding-inline: max(24px, calc((100vw - var(--page)) / 2 + 24px)); list-style: none; margin: 0; }
 .feats::-webkit-scrollbar { display: none; }
+.feats.arrastando { cursor: grabbing; user-select: none; }
+.feats.arrastando .feat { pointer-events: none; }
+/* the card in focus stays at full strength; the others recede a little */
+.feat { transition: opacity .5s var(--ease), translate .5s var(--ease); }
+.feats .feat:not(.ativo) { opacity: .55; }
+.feats:hover .feat { opacity: 1; }
 .feat { --x: 50%; --y: 0%; position: relative; isolation: isolate; flex: none; width: min(352px, 84vw); height: 496px; scroll-snap-align: start; display: flex; flex-direction: column; overflow: hidden; border-radius: 28px;
   background: var(--surface); box-shadow: var(--shadow-glass); -webkit-backdrop-filter: blur(32px) saturate(1.8); backdrop-filter: blur(32px) saturate(1.8); }
 .feat::before, .feat::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .5s var(--ease); }
@@ -195,9 +209,21 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .feat .ico svg { width: 20px; height: 20px; }
 .feat h3 { font-size: 17px; font-weight: 500; letter-spacing: -.014em; color: var(--text); }
 .feat p { margin-top: 14px; color: var(--muted); font-size: 15px; line-height: 1.55; }
-.feats-nav { display: flex; gap: 8px; margin-top: 8px; }
-.feats-nav i { height: 2px; width: 26px; border-radius: 2px; background: var(--border-strong); transition: background-color .3s var(--ease), width .3s var(--ease); }
-.feats-nav i.on { background: var(--text); width: 40px; }
+.feats-pe { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 12px; }
+.feats-nav { display: flex; gap: 4px; }
+.feats-nav button { padding: 10px 0; }
+.feats-nav i { position: relative; display: block; height: 3px; width: 26px; border-radius: 3px; background: var(--border-strong); overflow: hidden; transition: width .4s var(--ease), background-color .3s var(--ease); }
+.feats-nav button:hover i { background: var(--muted); }
+.feats-nav .on i { width: 48px; }
+/* the active dot fills up while autoplay waits, so the timing is visible */
+.feats-nav .on i::after { content: ""; position: absolute; inset: 0; background: var(--text); transform-origin: left; transform: scaleX(1); }
+.feats-nav.rodando .on i::after { animation: encher var(--dur, 4.5s) linear; }
+@keyframes encher { from { transform: scaleX(0); } }
+.auto { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px; font-size: 13px; color: var(--muted); background: var(--raised); box-shadow: var(--shadow-glass); transition: color .14s var(--ease); }
+.auto:hover { color: var(--text); }
+.auto .ico-pausa { width: 10px; height: 10px; border-inline: 3px solid currentColor; }
+.auto[aria-pressed="false"] .ico-pausa { border: 0; width: 0; height: 0; border-left: 9px solid currentColor; border-top: 5.5px solid transparent; border-bottom: 5.5px solid transparent; }
+@media (max-width: 640px) { .feats-ctrl { display: none; } }
 
 /* demos inside feature cards */
 .gauge { width: 260px; }
@@ -211,7 +237,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .bolhas { display: grid; gap: 10px; width: 100%; }
 .bolha { border-radius: 14px; padding: 10px 12px; background: var(--raised); box-shadow: var(--shadow-glass); font-size: 12px; color: var(--muted); }
 .bolha b { color: var(--accent); font-weight: 600; }
-.bolha .r { display: flex; gap: 6px; margin-top: 6px; color: var(--text); font-size: 13px; font-weight: 500; }
+.bolha .r { display: flex; align-items: center; gap: 6px; margin-top: 6px; color: var(--text); font-size: 13px; font-weight: 500; }
+.bolha .r svg { width: 14px; height: 14px; color: var(--accent); flex: none; }
 .barras { width: 100%; display: grid; gap: 14px; }
 .barras .l { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
 .barras .t { height: 8px; border-radius: 999px; background: var(--sunken); overflow: hidden; }
