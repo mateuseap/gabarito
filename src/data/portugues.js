@@ -34,6 +34,43 @@ Foi a avó quem quebrou o silêncio: "No meu tempo, a gente brigava na mesa, mas
 A cena é comum e não precisa de culpados. A tecnologia aproxima quem está longe, mas pode afastar quem está perto. O desafio talvez não seja abandonar o celular, e sim lembrar de levantar os olhos.`,
 };
 
+
+const RIO = {
+  titulo: 'O rio que passa pela cidade',
+  corpo: `O Capibaribe atravessa Limoeiro antes de chegar ao Recife. Para muitos moradores, ele é só uma paisagem que se vê da ponte. Para os mais velhos, é memória: lugar de banho, de pesca e de conversa no fim da tarde.
+
+Nas últimas décadas, o rio mudou. Recebeu esgoto, perdeu as margens verdes e, em alguns trechos, quase some na estiagem. Ainda assim, todo ano, quando as chuvas chegam, ele volta a encher e lembra a cidade de que continua vivo.
+
+Cuidar do rio não é tarefa só do governo. Começa em gestos pequenos, como não jogar lixo na rua, que a chuva leva até a água. Afinal, um rio limpo não é favor que se faz à natureza: é condição para a própria cidade continuar existindo.`,
+};
+
+const RECEITA = {
+  titulo: 'Cuscuz de milho',
+  corpo: `Ingredientes: 2 xícaras de flocão de milho, 1 xícara de água, sal a gosto.
+
+Modo de preparo:
+1. Coloque o flocão numa tigela e tempere com sal.
+2. Acrescente a água aos poucos, mexendo com as mãos até a massa ficar úmida, mas solta.
+3. Deixe descansar por 10 minutos.
+4. Coloque água no fundo da cuscuzeira, encaixe a parte de cima e espalhe a massa sem apertar.
+5. Tampe e leve ao fogo médio por cerca de 15 minutos, até o vapor sair pela tampa.
+
+Sirva quente, com manteiga, ovo ou carne de sol.`,
+};
+
+const POEMA = {
+  titulo: 'Sertão (poema)',
+  corpo: `O sol do meio-dia
+pesa feito chumbo no telhado.
+A terra rachada espera,
+o mandacaru vigia calado.
+
+Mas basta uma nuvem escura
+para o sertão inteiro sorrir:
+a chuva é promessa antiga
+que nunca deixa de vir.`,
+};
+
 export const PORTUGUES = [
   // ---------- simulado 1 ----------
   [
@@ -73,5 +110,44 @@ export const PORTUGUES = [
     q('Concordância', 'Assinale a frase correta quanto à concordância.', 'Mais de um aluno faltou à aula.', ['Os alunos e o professor chegou atrasado.', 'Fazem três dias que não chove.', 'É proibido a entrada de celulares.', 'Haviam poucas pessoas na reunião.'], 'Com "mais de um", o verbo fica no singular. "Fazer" (tempo) e "haver" (existir) são impessoais. "É proibida a entrada", com artigo, concorda.'),
     q('Regência', 'Assinale a frase em que a regência está correta.', 'Assistimos ao jogo pela televisão.', ['Assistimos o jogo pela televisão.', 'Obedeça o regulamento da escola.', 'Ele namora com a minha prima.', 'Cheguei em casa cedo.'], '"Assistir" no sentido de ver pede a preposição "a". "Obedecer a", "namorar alguém" e "chegar a" são as formas da norma padrão.'),
     q('Sinonímia', 'Em "foi a avó quem quebrou o silêncio", a expressão destacada pode ser substituída, sem mudar o sentido, por:', 'interrompeu o silêncio.', ['destruiu o silêncio.', 'aumentou o silêncio.', 'consertou o silêncio.', 'escondeu o silêncio.'], '"Quebrar o silêncio" é expressão figurada que significa começar a falar, interromper o silêncio.', CELULAR),
+  ],
+  // ---------- simulado 4 ----------
+  [
+    q('Ideia principal', 'Qual é a tese defendida no último parágrafo?', 'Preservar o rio é responsabilidade de todos e condição para a cidade existir.', ['O governo é o único culpado pela poluição do rio.', 'O rio vai secar de vez em poucos anos.', 'Os moradores mais velhos não se importam com o rio.', 'A chuva resolve sozinha os problemas do rio.'], 'O parágrafo final argumenta que o cuidado começa em gestos individuais e que um rio limpo é "condição para a própria cidade continuar existindo".', RIO),
+    q('Ideias secundárias', 'Segundo o texto, para os moradores mais velhos o rio representa:', 'memória de banho, pesca e convivência.', ['apenas uma paisagem vista da ponte.', 'uma ameaça nas enchentes.', 'uma fonte de renda com o turismo.', 'um obstáculo para o crescimento da cidade.'], 'O primeiro parágrafo diz: "Para os mais velhos, é memória: lugar de banho, de pesca e de conversa".', RIO),
+    q('Coesão', 'No trecho "Ainda assim, todo ano, quando as chuvas chegam, ele volta a encher", a expressão "Ainda assim" indica:', 'concessão, ou seja, algo que acontece apesar do que foi dito antes.', ['causa.', 'finalidade.', 'conclusão.', 'comparação.'], 'Mesmo depois de poluído e quase seco, o rio volta a encher: a ideia se mantém apesar do problema.', RIO),
+    q('Referenciação', 'No segundo parágrafo, o pronome "ele" retoma:', 'o rio.', ['o esgoto.', 'o governo.', 'o morador.', 'o Recife.'], '"Ele volta a encher" só faz sentido se referindo ao rio, assunto de todo o parágrafo.', RIO),
+    q('Gêneros e sequências', 'O texto "Cuscuz de milho" pertence a qual gênero e qual sequência predomina?', 'Receita, com sequência injuntiva.', ['Notícia, com sequência narrativa.', 'Crônica, com sequência descritiva.', 'Poema, com sequência argumentativa.', 'Biografia, com sequência expositiva.'], 'A receita orienta o leitor a fazer algo, com verbos no imperativo ("coloque", "acrescente"): sequência injuntiva.', RECEITA),
+    q('Classes de palavras', 'Em "Acrescente a água aos poucos", o verbo está no modo:', 'imperativo.', ['indicativo.', 'subjuntivo.', 'infinitivo.', 'gerúndio.'], 'O imperativo expressa ordem ou instrução, típico das receitas.', RECEITA),
+    q('Figuras de linguagem', 'Em "O sol do meio-dia / pesa feito chumbo no telhado", a figura de linguagem é:', 'comparação.', ['onomatopeia.', 'antítese.', 'eufemismo.', 'pleonasmo.'], 'O conectivo "feito" (como) aproxima o calor do sol e o peso do chumbo: comparação.', POEMA),
+    q('Linguagem literária', 'Em "o mandacaru vigia calado", o poema atribui ao mandacaru uma ação humana. Essa figura chama-se:', 'personificação.', ['metonímia.', 'hipérbole.', 'ironia.', 'catacrese.'], 'Vigiar e ficar calado são ações humanas atribuídas a uma planta: personificação.', POEMA),
+    q('Pontuação', 'Assinale a frase em que a vírgula foi usada corretamente.', 'Em Limoeiro, a feira acontece aos sábados.', ['A feira, acontece aos sábados.', 'Os feirantes, chegam cedo.', 'Comprei, macaxeira e coentro.', 'O rio Capibaribe, atravessa a cidade.'], 'A vírgula separa o adjunto adverbial deslocado "Em Limoeiro". Nunca se separa o sujeito do verbo com vírgula.'),
+    q('Concordância', 'Assinale a frase correta quanto à concordância verbal.', 'Fui eu que fiz o trabalho.', ['Fui eu que fez o trabalho.', 'Fomos eu que fiz o trabalho.', 'Foi eu que fiz o trabalho.', 'Fui eu que fizeram o trabalho.'], 'Com "que", o verbo concorda com o pronome anterior: "eu fiz".'),
+  ],
+  // ---------- simulado 5 ----------
+  [
+    q('Sentido contextual', 'No poema, "a chuva é promessa antiga / que nunca deixa de vir" sugere que:', 'o povo do sertão confia que a chuva sempre volta, mesmo depois da seca.', ['nunca chove no sertão.', 'a chuva chega todos os dias ao meio-dia.', 'o povo do sertão não gosta de chuva.', 'a chuva traz enchentes perigosas.'], 'A "promessa antiga" que "nunca deixa de vir" expressa esperança e confiança no retorno da chuva.', POEMA),
+    q('Antítese', 'O poema contrapõe dois momentos. Qual par de ideias opostas aparece nele?', 'A seca que oprime e a chuva que alegra.', ['O dia e a noite na cidade.', 'A riqueza e a pobreza.', 'O mar e o rio.', 'A infância e a velhice.'], 'A primeira estrofe mostra a seca ("terra rachada"); a segunda, a alegria com a chuva: ideias opostas.', POEMA),
+    q('Denotação e conotação', 'Assinale a frase em que a palavra "pesado" está em sentido denotativo (literal).', 'A caixa de livros está pesada demais para carregar.', ['Ele tem um coração pesado de saudade.', 'O clima da reunião ficou pesado.', 'Que piada pesada!', 'Carregou um passado pesado por anos.'], 'Só na primeira "pesada" se refere a massa física, no sentido literal do dicionário.'),
+    q('Formação de palavras', 'A palavra "guarda-chuva" é formada por:', 'composição por justaposição.', ['derivação prefixal.', 'derivação sufixal.', 'composição por aglutinação.', 'derivação regressiva.'], 'Junta duas palavras que mantêm sua forma e acento: justaposição. Na aglutinação há perda de som, como em "planalto".'),
+    q('Coordenação e subordinação', 'Em "Estudou muito, por isso passou na prova", a conjunção "por isso" expressa:', 'conclusão.', ['causa.', 'oposição.', 'tempo.', 'condição.'], '"Por isso" introduz a consequência ou conclusão do fato anterior.'),
+    q('Coordenação e subordinação', 'Em "Embora estivesse cansado, terminou a tarefa", a oração destacada expressa:', 'concessão.', ['causa.', 'consequência.', 'finalidade.', 'proporção.'], '"Embora" introduz um fato que poderia impedir o outro, mas não impede: concessão.'),
+    q('Regência', 'Assinale a frase em que a regência do verbo "obedecer" está correta.', 'Os alunos obedecem às regras da escola.', ['Os alunos obedecem as regras da escola.', 'Os alunos obedecem com as regras da escola.', 'Os alunos obedecem nas regras da escola.', 'Os alunos obedecem pelas regras da escola.'], '"Obedecer" pede a preposição "a": obedecer a algo. Com "as regras", forma-se a crase: "às regras".'),
+    q('Crase', 'Assinale a frase em que o acento indicativo de crase está correto.', 'Vou à feira no sábado.', ['Vou à pé para a escola.', 'Ele começou à estudar cedo.', 'Entreguei o livro à ele.', 'Fiquei frente à frente com o professor.'], '"Ir a" + "a feira" = "à feira". Não há crase antes de palavra masculina, de verbo ou de pronome pessoal, nem em expressões com palavras repetidas.'),
+    q('Variedades da língua', 'A frase "Oxe, menino, tu tá aperreado por quê?" apresenta marcas de:', 'variedade regional nordestina, em linguagem informal.', ['linguagem técnica.', 'norma padrão formal.', 'linguagem jurídica.', 'português arcaico.'], '"Oxe", "aperreado" e o uso de "tu tá" são marcas regionais e informais, legítimas na fala.'),
+    q('Homonímia e paronímia', 'Assinale a frase em que a palavra foi empregada corretamente.', 'O prefeito vai sancionar a nova lei.', ['O motorista foi autuado em fragrante.', 'A peça teve um bom censo de humor.', 'O cavaleiro cumprimentou a dama com um comprimento.', 'Vou concertar o carro na oficina.'], '"Sancionar" é aprovar uma lei. As outras confundem flagrante/fragrante, senso/censo, cumprimento/comprimento e consertar/concertar.'),
+  ],
+  // ---------- simulado 6 ----------
+  [
+    q('Intertextualidade', 'Uma propaganda diz: "Vim, vi e economizei". Ela faz referência à famosa frase "Vim, vi e venci". Esse recurso chama-se:', 'intertextualidade (paródia).', ['ambiguidade.', 'eufemismo.', 'pleonasmo.', 'hipérbole.'], 'O texto retoma outro já conhecido e o transforma com humor: intertextualidade, na forma de paródia.'),
+    q('Ambiguidade', 'Qual frase apresenta ambiguidade?', 'Vi o acidente da janela do ônibus.', ['Vi o acidente quando estava no ônibus.', 'Da janela do ônibus, vi o acidente.', 'O acidente aconteceu perto da escola.', 'Ninguém se feriu no acidente.'], 'Não fica claro se quem estava na janela do ônibus era quem viu ou se o acidente aconteceu na janela do ônibus.'),
+    q('Polissemia', 'Em qual frase a palavra "pegar" tem o sentido de "contrair (uma doença)"?', 'Ele pegou uma gripe na viagem.', ['Ela pegou o ônibus das sete.', 'Pegue o livro na estante.', 'O carro não quer pegar.', 'Pegou o jeito de tocar violão.'], 'A mesma palavra tem vários sentidos (polissemia). Só na primeira significa contrair uma doença.'),
+    q('Termos da oração', 'Na frase "Os estudantes entregaram o trabalho ao professor", o termo "ao professor" é:', 'objeto indireto.', ['objeto direto.', 'sujeito.', 'adjunto adverbial.', 'predicativo do sujeito.'], 'Quem entrega, entrega algo (objeto direto: o trabalho) a alguém (objeto indireto, com preposição: ao professor).'),
+    q('Classes de palavras', 'Em "Ela chegou cedo, mas a reunião já tinha começado", as palavras "cedo" e "já" são:', 'advérbios de tempo.', ['adjetivos.', 'conjunções.', 'preposições.', 'pronomes.'], 'Ambas indicam circunstância de tempo do verbo: advérbios.'),
+    q('Concordância', 'Assinale a frase correta.', 'Seguem anexos os documentos pedidos.', ['Segue anexo os documentos pedidos.', 'Seguem anexo os documentos pedidos.', 'Seguem anexas os documentos pedidos.', 'Segue anexos os documentos pedidos.'], '"Anexo" concorda com o substantivo: documentos (masculino plural) = anexos. O verbo concorda com o sujeito "os documentos".'),
+    q('Pontuação', 'Assinale a frase em que as vírgulas isolam corretamente um vocativo.', 'Maria, traga o caderno amanhã.', ['Maria traga, o caderno amanhã.', 'Maria traga o caderno, amanhã.', 'Maria, traga, o caderno amanhã.', 'Maria traga o, caderno amanhã.'], 'Vocativo é o termo usado para chamar alguém; vem sempre separado por vírgula.'),
+    q('Coesão', 'Assinale a alternativa em que o conectivo expressa causa.', 'Não saiu de casa porque estava chovendo.', ['Não saiu de casa, mas estava chovendo.', 'Não saiu de casa, logo estava chovendo.', 'Não saiu de casa quando estava chovendo.', 'Não saiu de casa, embora estivesse chovendo.'], '"Porque" introduz o motivo do fato: causa.'),
+    q('Gêneros e sequências', 'Um texto que apresenta uma opinião e a defende com argumentos, buscando convencer o leitor, é predominantemente:', 'argumentativo.', ['narrativo.', 'descritivo.', 'injuntivo.', 'expositivo.'], 'Defender um ponto de vista com argumentos é a marca da sequência argumentativa, como no artigo de opinião.'),
+    q('Sinonímia e antonímia', 'Em "O rio quase some na estiagem", a palavra "estiagem" tem como antônimo:', 'cheia.', ['seca.', 'calor.', 'verão.', 'sertão.'], 'Estiagem é o período sem chuva, de seca. O contrário é a cheia, quando o rio enche.', RIO),
   ],
 ];
