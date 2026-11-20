@@ -1,5 +1,5 @@
 import './styles/app.css';
-import { PROVAS, simulados } from './data/catalogo.js';
+import { CATEGORIAS, EM_BREVE, PROVAS, provaDoSimulado, simulados, totalQuestoes } from './data/catalogo.js';
 import { corrigir, formatarTempo, montarTentativa } from './motor.js';
 
 // Progress lives in the student's browser only: no account, no server.
@@ -10,194 +10,263 @@ const gravar = (d) => { try { localStorage.setItem(CHAVE, JSON.stringify(d)); } 
 const app = document.getElementById('app');
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const LETRAS = 'ABCDE';
-let tique = null;
+let limpar = [];
+const aoSair = (fn) => limpar.push(fn);
 
-const ICONE = {
-  marca: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#a8e05f"/><path d="M18 33l9 9 19-20" fill="none" stroke="#101508" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  relogio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
+const I = {
+  marca: '<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="18" fill="#a8e05f"/><path d="M19 33.5l8.5 8.5L45 23.5" fill="none" stroke="#101508" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  seta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  baixo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
+  mais: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
   check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>',
-  alvo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5" fill="currentColor"/></svg>',
+  relogio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg>',
+  alvo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/></svg>',
+  raio: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>',
+  luz: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>',
+  grade: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></svg>',
+  cadeado: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
   stats: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>',
   hist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5M12 7v5l3 2"/></svg>',
   livro: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2zM4 19V5"/></svg>',
+  pessoa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
 };
 
-// ---------------- landing ----------------
+// mascot: the brand check-mark as a living blob (float, blink, shine), timings from the reference
+const MASCOTE = `<svg class="mascote" viewBox="0 0 120 120" aria-hidden="true">
+  <defs><radialGradient id="mg" cx="40%" cy="30%" r="80%"><stop offset="0" stop-color="#d6f5a8"/><stop offset=".55" stop-color="#a8e05f"/><stop offset="1" stop-color="#5fa22a"/></radialGradient>
+  <clipPath id="mc"><rect x="18" y="14" width="84" height="84" rx="26"/></clipPath></defs>
+  <ellipse class="sombra" cx="60" cy="110" rx="30" ry="5" fill="#a8e05f" opacity=".25"/>
+  <g class="corpo"><rect x="18" y="14" width="84" height="84" rx="26" fill="url(#mg)"/>
+    <g clip-path="url(#mc)"><rect class="brilho" x="10" y="0" width="22" height="120" fill="#fff" opacity=".35"/></g>
+    <ellipse class="olho" cx="47" cy="50" rx="6" ry="8" fill="#101508"/><ellipse class="olho" cx="73" cy="50" rx="6" ry="8" fill="#101508"/>
+    <path d="M44 70c5 6 27 6 32 0" fill="none" stroke="#101508" stroke-width="5" stroke-linecap="round"/></g></svg>`;
+
+// ---------------- shared bits ----------------
+function cabecalho(acao = `<a class="btn btn-acc btn-sm" href="#catalogo">Ver simulados</a>`, links = true) {
+  return `<header class="topo" id="topo"><div class="barra">
+    <a class="marca" href="#/">${I.marca}Gabarito</a>
+    ${links ? `<nav aria-label="Principal"><a href="#catalogo">Simulados</a><a href="#recursos">Recursos</a><a href="#como">Como funciona</a><a href="#perguntas">Perguntas</a></nav>` : ''}
+    ${acao}</div></header>`;
+}
+function ligarTopo() {
+  const topo = document.getElementById('topo'); if (!topo) return;
+  const f = () => topo.classList.toggle('rolou', scrollY > 24);
+  addEventListener('scroll', f, { passive: true }); f();
+  aoSair(() => removeEventListener('scroll', f));
+}
+function ligarReveal() {
+  const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('vis'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -12% 0px' });
+  document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+  aoSair(() => io.disconnect());
+}
 function estatisticas() {
   const { tentativas } = ler();
   if (!tentativas.length) return null;
-  const notas = tentativas.map((t) => t.resultado.total);
-  const dias = new Set(tentativas.map((t) => new Date(t.fim).toDateString()));
-  return { feitos: tentativas.length, melhor: Math.max(...notas), media: notas.reduce((a, b) => a + b, 0) / notas.length, notas, dias };
+  const pct = tentativas.map((t) => t.resultado.acertos / t.resultado.total);
+  return { feitos: tentativas.length, pct, melhor: Math.max(...pct), media: pct.reduce((a, b) => a + b, 0) / pct.length, dias: new Set(tentativas.map((t) => new Date(t.fim).toDateString())), tempo: tentativas.reduce((s, t) => s + t.duracao, 0) };
 }
+const pctTxt = (x) => `${Math.round(x * 100)}%`;
 
-function painelDemo() {
+// ---------------- landing ----------------
+function painel() {
   const st = estatisticas();
-  const notas = st ? st.notas.slice(-12) : [8, 10, 9, 12, 11, 13, 12, 15, 14, 16, 15, 17];
-  const max = 20, w = 600, h = 150;
-  const pts = notas.map((n, i) => [notas.length === 1 ? w / 2 : (i * w) / (notas.length - 1), h - 12 - (n / max) * (h - 30)]);
-  const linha = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
-  const area = `${linha} L${w} ${h} L0 ${h} Z`;
-  const dias = st ? st.dias : null;
-  const calor = Array.from({ length: 90 }, (_, i) => {
-    const d = new Date(Date.now() - (89 - i) * 864e5).toDateString();
-    const n = dias ? (dias.has(d) ? 4 : 0) : [0, 0, 1, 0, 2, 0, 1, 3, 0, 2, 4, 1, 0, 3, 2][(i * 7) % 15];
+  const serie = st ? st.pct.slice(-14) : [.42, .48, .45, .55, .52, .6, .58, .66, .63, .7, .68, .76, .74, .82];
+  const w = 640, h = 130;
+  const pts = serie.map((v, i) => [serie.length === 1 ? w / 2 : (i * w) / (serie.length - 1), h - 8 - v * (h - 20)]);
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+  const calor = Array.from({ length: 26 * 5 }, (_, i) => {
+    const dia = new Date(Date.now() - (129 - i) * 864e5).toDateString();
+    const n = st ? (st.dias.has(dia) ? 4 : 0) : [0, 1, 0, 2, 3, 0, 1, 4, 2, 0, 3, 1, 0, 2, 4][(i * 7 + (i >> 3)) % 15] * (i > 40 ? 1 : i % 3 === 0 ? 1 : 0);
     return `<b data-n="${n}"></b>`;
   }).join('');
-  const k = (rotulo, valor, extra = '') => `<div class="card"><div class="k">${rotulo}</div><div class="v">${valor}${extra}</div></div>`;
-  return `
-  <div class="janela" aria-label="${st ? 'Seu progresso' : 'Exemplo do painel de progresso'}">
-    <div class="barra"><i></i><i></i><i></i></div>
-    <div class="painel">
-      <aside>
-        <div class="item on">${ICONE.stats} Progresso</div>
-        <div class="item">${ICONE.hist} Histórico</div>
-        <div class="item">${ICONE.livro} Conteúdo</div>
-      </aside>
-      <main>
-        <div class="card full"><div class="k">${st ? 'Suas notas nos simulados' : 'Nota nos simulados (exemplo)'}</div>
-          <div class="v">${st ? st.melhor : 17}<small style="font-size:18px;color:var(--muted)"> /20</small>${st ? '' : '<span class="delta">↑ 9 pontos</span>'}</div>
-          <svg class="grafico" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a8e05f" stop-opacity=".35"/><stop offset="1" stop-color="#a8e05f" stop-opacity="0"/></linearGradient></defs><path d="${area}" fill="url(#g)"/><path d="${linha}" fill="none" stroke="#a8e05f" stroke-width="3" vector-effect="non-scaling-stroke"/></svg>
-        </div>
-        ${k('Simulados feitos', st ? st.feitos : 12)}
-        ${k('Média', st ? st.media.toFixed(1).replace('.', ',') : '13,1')}
-        ${k('Tempo por questão', st ? '' : '2:40', st ? '<span style="font-size:15px;color:var(--muted)">veja no resultado</span>' : '')}
-        <div class="card full"><div class="k">Dias de estudo</div><div class="calor">${calor}</div></div>
-      </main>
-    </div>
-  </div>`;
+  const card = (k, v, extra = '') => `<div class="card"><div class="k">${k}</div><div class="v">${v}${extra}</div></div>`;
+  return `<section class="janela-sec page rv" aria-label="${st ? 'Seu progresso' : 'Exemplo do painel de progresso'}">
+    <div class="janela"><div class="luzes"><i></i><i></i><i></i></div>
+      <div class="app">
+        <aside><div class="marca">${I.marca}Gabarito</div>
+          <div class="it on">${I.stats}Progresso</div><div class="it">${I.hist}Histórico</div><div class="it">${I.livro}Conteúdo</div><div class="it">${I.alvo}Revisar</div>
+          <div class="it plano">${I.pessoa}Grátis, sem conta</div></aside>
+        <main>
+          <div class="filtro"><span class="pill">${st ? 'Todos os simulados' : 'Últimos 30 dias'}</span><span class="pill acc">${st ? `${st.feitos} feitos` : 'Exemplo'}</span></div>
+          <div class="card full"><div class="k">Acertos nos simulados</div>
+            <div class="v big">${st ? pctTxt(st.melhor) : '82%'}<span class="delta">↑ ${st ? 'melhor nota' : '40 pontos'}</span></div>
+            <svg class="grafico" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a8e05f" stop-opacity=".3"/><stop offset="1" stop-color="#a8e05f" stop-opacity="0"/></linearGradient></defs>
+              <path d="${d} L${w} ${h} L0 ${h} Z" fill="url(#ga)"/><path class="linha" d="${d}" fill="none" stroke="#a8e05f" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
+            <div class="grafico-eixo"><span>${st ? 'primeiro simulado' : '14 simulados atrás'}</span><span>${st ? 'último' : 'hoje'}</span></div></div>
+          ${card('Simulados feitos', st ? st.feitos : 14, st ? '' : '<span class="delta">↑ 18%</span>')}
+          ${card('Média de acertos', st ? pctTxt(st.media) : '63%')}
+          ${card('Tempo treinando', st ? formatarTempo(st.tempo) : '7 h 40 min')}
+          <div class="card full"><div class="k">Dias de estudo</div><div class="calor">${calor}</div></div>
+        </main></div></div></section>`;
 }
 
 function landing() {
-  const prova = PROVAS[0], lista = simulados(prova), { tentativas, emAndamento } = ler();
-  const melhor = (id) => { const ts = tentativas.filter((t) => t.simuladoId === id); return ts.length ? Math.max(...ts.map((t) => t.resultado.total)) : null; };
-  const topicos = Object.fromEntries(prova.disciplinas.map((d) => [d.id, [...new Set(d.questoes.flat().map((q) => q.topico))]]));
-  const pt = topicos.pt, mat = topicos.mat;
-  app.innerHTML = `
-  <nav class="nav" aria-label="Principal">
-    <a class="marca" href="#/">${ICONE.marca} Gabarito</a>
-    <div class="links"><a href="#simulados">Simulados</a><a href="#prova">A prova</a><a href="#recursos">Recursos</a><a href="#perguntas">Perguntas</a></div>
-    <a class="btn btn-acc" href="#/simulado/${lista[0].id}">Começar</a>
-  </nav>
+  const { tentativas, emAndamento } = ler();
+  const melhor = (id) => { const ts = tentativas.filter((t) => t.simuladoId === id); return ts.length ? ts.reduce((a, t) => (t.resultado.acertos > a.resultado.acertos ? t : a)) : null; };
+  const prim = simulados(PROVAS[0])[0];
+  const continuar = emAndamento && provaDoSimulado(emAndamento.simuladoId);
+  const marcas = [...PROVAS.map((p) => [p.sigla, p.nome, p.cor]), ...EM_BREVE.map((p) => [p.sigla, p.nome, p.cor])];
+  const lista = marcas.map(([s, n, c]) => `<li><span class="logo" style="background:${c}">${esc(s)}</span>${esc(n)}</li>`).join('');
 
-  <header class="wrap hero">
-    <span class="tag">Simulados para a seleção das Escolas Técnicas de Pernambuco</span>
-    <h1 class="h-display">Você treina.<br><span class="dim">A ETE fica fácil.</span></h1>
-    <p class="lead">Simulados no formato exato da prova da ETE: 20 questões, 60 minutos, Português e Matemática. Correção na hora, com a explicação de cada questão.</p>
+  app.innerHTML = `<div class="page-light"></div>
+  ${cabecalho()}
+  <main>
+  <section class="hero page" id="inicio">
+    ${MASCOTE}
+    <span class="tag">Simulados para provas de seleção e certificações</span>
+    <h1 class="display">Você treina.<br><span class="dim">A prova fica fácil.</span></h1>
+    <p class="lede">Simulados no formato exato de cada prova, com cronômetro, correção na hora e a explicação de cada questão. De seleções escolares a certificações de TI.</p>
     <div class="acoes">
-      <a class="btn btn-acc btn-lg" href="#/simulado/${(emAndamento && lista.find((s) => s.id === emAndamento.simuladoId)?.id) || lista[0].id}">${emAndamento ? 'Continuar simulado' : 'Fazer o Simulado 1'}</a>
-      <a class="btn btn-ghost btn-lg" href="#prova">Como é a prova</a>
+      <a class="btn btn-acc" href="${continuar ? `#/simulado/${emAndamento.simuladoId}` : '#catalogo'}">${continuar ? 'Continuar simulado' : 'Escolher uma prova'}</a>
+      <a class="btn btn-glass" href="#/simulado/${prim.id}">Fazer um simulado agora</a>
     </div>
-    <p class="micro">Grátis, sem cadastro. Seu progresso fica salvo só neste aparelho.</p>
-    ${contagem()}
-  </header>
-
-  <div class="wrap">${painelDemo()}</div>
-
-  <section class="sec" aria-label="Conteúdos">
-    <div class="wrap" style="text-align:center;margin-bottom:22px"><span class="micro">Todo o conteúdo do edital 2027, nos dois componentes</span></div>
-    <div class="marquee"><div class="trilho">${[...pt, ...mat, ...pt, ...mat].map((t) => `<span>${esc(t)}</span>`).join('')}</div></div>
+    <p class="small">Grátis, sem cadastro, ${totalQuestoes()} questões inéditas.</p>
+    <a class="rolar" href="#catalogo">Role para ver as provas${I.baixo}</a>
+    <div class="halo" aria-hidden="true"></div>
   </section>
 
-  <section class="sec" id="simulados">
-    <div class="wrap">
-      <div class="sec-head"><span class="eyebrow">Simulados</span><h2 class="h-sec">Uma prova inteira, <span class="dim">quantas vezes quiser.</span></h2>
-        <p class="lead">Cada simulado tem 20 questões inéditas, na mesma divisão e no mesmo tempo da prova real. As alternativas mudam de ordem a cada tentativa.</p></div>
-      <div class="lista">
-        ${lista.map((s) => { const m = melhor(s.id); return `
-        <article class="sim">
-          <span class="n">${esc(prova.curto)} · ${s.questoes.length} questões</span>
-          <h3>${esc(s.titulo)}</h3>
-          <div class="meta"><span>${prova.formato.minutos} min</span><span>10 Português</span><span>10 Matemática</span></div>
-          <span class="melhor">${m === null ? '' : `Sua melhor nota: ${m}/20`}</span>
-          <a class="btn ${m === null ? 'btn-acc' : 'btn-ghost'}" href="#/simulado/${s.id}">${m === null ? 'Começar' : 'Refazer'}</a>
-        </article>`; }).join('')}
-        <article class="sim breve"><span class="n">Em breve</span><h3>Mais provas</h3><p>IFPE, colégios de aplicação e outras seleções entram aqui, no mesmo formato.</p></article>
+  ${painel()}
+
+  <section class="sec" aria-labelledby="t-marcas">
+    <div class="page sec-head center rv"><h2 class="h2-sm" id="t-marcas">Do ensino técnico à nuvem</h2><p class="lede">Cada prova tem o formato real: número de questões, alternativas, tempo e regra de aprovação.</p></div>
+    <div class="page"><div class="marquee rv" data-d="1"><div class="trilho"><ul>${lista}</ul><ul aria-hidden="true">${lista}</ul></div></div></div>
+  </section>
+
+  <section class="sec" id="catalogo" aria-labelledby="t-cat">
+    <div class="page">
+      <div class="sec-head rv"><span class="eyebrow">Simulados</span><h2 class="h2" id="t-cat">Escolha a sua prova.</h2>
+        <p class="lede">Cada simulado é uma prova completa. As alternativas mudam de ordem a cada tentativa, então refazer é treinar, não decorar.</p></div>
+      <div class="abas rv" data-d="1" role="tablist" aria-label="Categoria">
+        <button role="tab" aria-selected="true" data-cat="todas">Todas</button>
+        ${CATEGORIAS.map((c) => `<button role="tab" aria-selected="false" data-cat="${c.id}">${esc(c.nome)}</button>`).join('')}
       </div>
+      <div class="provas">${PROVAS.map((p, i) => cartaoProva(p, melhor, i)).join('')}</div>
+      <div class="breve rv">${EM_BREVE.map((b) => `<div data-cat="${b.categoria}"><span class="selo-prova" style="--cor:${b.cor}">${esc(b.sigla)}</span><span>${esc(b.nome)}<br><span class="small">em breve</span></span></div>`).join('')}</div>
     </div>
   </section>
 
-  <section class="sec" id="recursos">
-    <div class="wrap">
-      <div class="sec-head"><span class="eyebrow">Recursos</span><h2 class="h-sec">Feito para treinar <span class="dim">do jeito que cai.</span></h2></div>
-      <div class="feats">
-        <article class="feat"><div class="demo"><div class="relogio-demo" id="relogioDemo">60:00<small>tempo de prova</small></div></div>
-          <div class="txt"><span class="ico">${ICONE.relogio}</span><h3>Cronômetro real</h3><p>60 minutos, como no dia. Quando o tempo acaba, a prova fecha sozinha, igual ao sistema da SEE.</p></div></article>
-        <article class="feat"><div class="demo"><div class="alts-demo"><div class="no"><b>A</b> 2/8</div><div class="ok"><b>B</b> 3/8 ✓</div><div><b>C</b> 5/8</div></div></div>
-          <div class="txt"><span class="ico">${ICONE.check}</span><h3>Correção explicada</h3><p>No fim, cada questão mostra a resposta certa e o porquê, em uma ou duas linhas. Errar vira aula.</p></div></article>
-        <article class="feat"><div class="demo"><div class="barras-demo">
-            <div><div class="l"><span>Porcentagem</span><span>3/3</span></div><div class="t"><i style="width:100%"></i></div></div>
-            <div><div class="l"><span>Concordância</span><span>1/2</span></div><div class="t"><i style="width:50%"></i></div></div>
-            <div><div class="l"><span>Triângulos</span><span>0/1</span></div><div class="t"><i style="width:6%"></i></div></div></div></div>
-          <div class="txt"><span class="ico">${ICONE.alvo}</span><h3>O que revisar</h3><p>O resultado separa os assuntos do edital em que você errou, para você saber exatamente o que estudar.</p></div></article>
+  <section class="sec" id="recursos" aria-labelledby="t-rec">
+    <div class="page sec-head rv"><span class="eyebrow">Recursos</span><h2 class="h2" id="t-rec">Feito para treinar<br><span class="dim">do jeito que cai.</span></h2></div>
+    <div class="feats-wrap rv" data-d="1">
+      <ul class="feats" id="feats">
+        ${feat(I.relogio, 'O tempo da prova real', 'O cronômetro não pausa e a prova fecha sozinha no fim, como no dia. Você aprende o seu ritmo antes de valer.', `
+          <svg class="gauge" viewBox="0 0 260 170" aria-hidden="true"><path d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14" stroke-linecap="round"/>
+          <path class="arco" pathLength="1" d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="#a8e05f" stroke-width="14" stroke-linecap="round"/>
+          <text x="130" y="128" text-anchor="middle" font-size="44" font-weight="500" fill="#fff" letter-spacing="-2" id="gaugeT">60:00</text>
+          <text x="130" y="156" text-anchor="middle" font-size="13" fill="#9d9daa">minutos restantes</text></svg>`)}
+        ${feat(I.check, 'Correção explicada', 'Ao entregar, cada questão mostra a resposta certa e o porquê. Errar vira aula, não frustração.', `
+          <div class="riscado"><s>B) 2/8</s><s>D) 5/8</s><span class="ok">${I.check} C) 3/8: comeram 5 de 8 pedaços</span><s>A) 1/8</s></div>`)}
+        ${feat(I.alvo, 'O que revisar', 'O resultado separa os assuntos em que você errou, do jeito que o edital ou o guia oficial organiza.', `
+          <div class="barras"><div><div class="l"><span>Porcentagem</span><span>3/3</span></div><div class="t"><i style="--w:100%"></i></div></div>
+          <div><div class="l"><span>Concordância</span><span>1/2</span></div><div class="t"><i style="--w:50%"></i></div></div>
+          <div><div class="l"><span>Security and Compliance</span><span>4/6</span></div><div class="t"><i style="--w:66%"></i></div></div>
+          <div><div class="l"><span>Triângulos</span><span>0/1</span></div><div class="t"><i style="--w:4%"></i></div></div></div>`)}
+        ${feat(I.grade, 'Mapa de questões', 'Pule entre as questões e veja o que já respondeu, como nos sistemas de prova no computador.', `
+          <div class="mini-mapa">${Array.from({ length: 15 }, (_, i) => `<b class="${[0, 1, 2, 4, 5, 7, 8, 11].includes(i) ? 'f' : ''} ${i === 9 ? 'a' : ''}">${i + 1}</b>`).join('')}</div>`)}
+        ${feat(I.luz, 'Questões inéditas', 'Escritas a partir do conteúdo oficial de cada prova, com texto-base próprio. Nada copiado de provas anteriores.', `
+          <div class="bolhas"><div class="bolha">Edital ETE 2027, item 12.2<div class="r">${I.check} Regra de três composta</div></div><div class="bolha">AWS CLF-C02, domínio 2<div class="r">${I.check} Shared responsibility</div></div><div class="bolha">Edital ETE 2027, item 12.1<div class="r">${I.check} Figuras de linguagem</div></div></div>`)}
+        ${feat(I.cadeado, 'Seu progresso é seu', 'Sem conta e sem servidor: notas e histórico ficam só no seu navegador. Ninguém mais vê.', `
+          <div class="cadeado"><div class="disp">${I.cadeado}</div><span>salvo só neste aparelho</span></div>`)}
+      </ul>
+      <div class="page"><div class="feats-nav" id="featsNav">${Array.from({ length: 6 }, (_, i) => `<i class="${i ? '' : 'on'}"></i>`).join('')}</div></div>
+    </div>
+  </section>
+
+  <section class="sec" id="como" aria-labelledby="t-como">
+    <div class="page">
+      <div class="sec-head rv"><span class="eyebrow">Como funciona</span><h2 class="h2" id="t-como">Três passos.<br><span class="dim">Nenhum cadastro.</span></h2></div>
+      <div class="passos">
+        ${[['1', 'Escolha a prova', 'Seleção escolar ou certificação. Cada uma com o formato oficial e a fonte citada.'], ['2', 'Faça no tempo real', 'O cronômetro começa ao abrir e não pausa. Responda, pule, volte, entregue.'], ['3', 'Aprenda com o erro', 'Nota, assuntos para revisar e a explicação de cada questão. Depois, refaça.']]
+          .map(([n, t, p], i) => `<div class="passo rv" data-d="${i}"><span class="num">Passo ${n}</span><h3>${t}</h3><p>${p}</p></div>`).join('')}
       </div>
+      ${PROVAS.map((p) => `
+      <div class="detalhe rv">
+        <div class="sec-head"><span class="eyebrow">${esc(p.curto)}</span><h3 class="h2" style="font-size:28px">${esc(p.nome)}</h3><p class="lede">${esc(p.descricao)}</p>
+          <p class="small">Fonte: <a href="${p.fonte.url}" target="_blank" rel="noopener">${esc(p.fonte.nome)}</a></p></div>
+        <div><ul class="regras">${p.regras.map((r) => `<li>${I.check}<span>${esc(r)}</span></li>`).join('')}</ul>
+          <div class="chips">${[...new Set(p.disciplinas.flatMap((d) => d.blocos.flat().map((x) => x.topico)))].slice(0, 22).map((t) => `<span>${esc(t)}</span>`).join('')}</div></div>
+      </div>`).join('')}
     </div>
   </section>
 
-  <section class="sec" id="prova">
-    <div class="wrap">
-      <div class="sec-head"><span class="eyebrow">A prova</span><h2 class="h-sec">Como é a seleção <span class="dim">da ETE 2027.</span></h2>
-        <p class="lead">${esc(prova.descricao)}</p></div>
-      <div class="regras">
-        <ol>${prova.regras.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>
-        <div class="conteudo">
-          <div class="card"><h3>Língua Portuguesa</h3><div class="chips">${['Interpretação de textos', 'Ideias principais e secundárias', 'Coesão e coerência', 'Intertextualidade', 'Gêneros e sequências textuais', 'Sinonímia, antonímia, polissemia', 'Conotação e denotação', 'Figuras de linguagem', 'Norma padrão e variedades', 'Formação de palavras', 'Classes gramaticais', 'Coordenação e subordinação', 'Pontuação', 'Concordância e regência'].map((c) => `<span>${c}</span>`).join('')}</div></div>
-          <div class="card"><h3>Matemática</h3><div class="chips">${['Quatro operações', 'Frações e decimais', 'Potenciação e radiciação', 'Expressões numéricas', 'Sistemas de medidas', 'Razão e proporção', 'Divisão proporcional', 'Regra de três', 'Porcentagem', 'Médias', 'Polinômios', 'Produtos notáveis e fatoração', 'Equações do 1º grau', 'Sistemas lineares', 'Ângulos e polígonos', 'Triângulos e semelhança'].map((c) => `<span>${c}</span>`).join('')}</div></div>
-          <p class="micro">Fonte: <a href="${prova.fonte.url}" target="_blank" rel="noopener">${esc(prova.fonte.nome)}</a>, itens 4 e 12.</p>
-        </div>
-      </div>
+  <section class="sec" id="perguntas" aria-labelledby="t-faq">
+    <div class="page faq">
+      <div class="lado rv"><h2 class="h2" id="t-faq">Perguntas.</h2><p class="lede">Não achou a sua? O código é aberto: abra uma issue no GitHub.</p>
+        <div><a class="btn btn-glass btn-sm" href="https://github.com/mateuseap/gabarito/issues" target="_blank" rel="noopener">Falar com a gente ${I.seta}</a></div></div>
+      <div class="rv" data-d="1">${[
+        ['As questões são das provas reais?', 'Não. São inéditas, escritas a partir do conteúdo oficial (edital ou guia da certificação), no mesmo formato. Provas reais normalmente não são divulgadas.'],
+        ['Preciso criar conta?', 'Não. É só abrir e fazer. O progresso fica salvo no navegador deste aparelho. Se você limpar os dados do navegador, o histórico some.'],
+        ['O simulado da AWS é igual à prova?', 'Na proporção de domínios e no ritmo, sim: 20 questões em 28 minutos, o mesmo tempo por questão da prova de 65 em 90 minutos. A nota de 100 a 1000 é uma estimativa; a AWS usa um modelo de pontuação próprio.'],
+        ['A ETE de Limoeiro está aqui?', 'Sim. A seleção das ETEs de Pernambuco é uma prova única para as 71 escolas, inclusive a ETE José Humberto de Moura Cavalcanti, em Limoeiro.'],
+        ['Funciona no celular?', 'Sim. Mas a maioria dessas provas é feita no computador, então vale treinar pelo menos uma vez num computador.'],
+        ['Vai ter mais provas?', 'Sim. IFPE, ENEM, AWS Solutions Architect e Azure Fundamentals estão na fila. Cada prova nova entra no mesmo formato.'],
+      ].map(([p, r]) => `<details><summary>${p}${I.mais}</summary><p>${r}</p></details>`).join('')}</div>
     </div>
   </section>
 
-  <section class="sec" id="perguntas">
-    <div class="wrap faq">
-      <div><span class="eyebrow">Perguntas</span><h2 class="h-sec">Dúvidas.</h2></div>
-      <div>
-        ${[
-          ['As questões são da prova real?', 'Não. São questões inéditas, escritas no mesmo formato e sobre os mesmos assuntos do edital 2027. A prova real não é divulgada.'],
-          ['Preciso criar conta?', 'Não. É só abrir e fazer. Suas notas ficam salvas no navegador deste aparelho; se limpar os dados do navegador, o histórico some.'],
-          ['Funciona no celular?', 'Sim. Mas a prova da ETE é feita no computador, então vale treinar pelo menos uma vez num computador, para pegar o ritmo.'],
-          ['Quanto preciso tirar?', 'Para não ser eliminado, pelo menos 4 pontos no total e pelo menos 1 acerto em cada disciplina. Para passar, depende da concorrência do curso e da escola.'],
-          ['A ETE de Limoeiro tem quais cursos?', 'A ETE José Humberto de Moura Cavalcanti, em Limoeiro, oferece Desenvolvimento de Sistemas e Nutrição e Dietética, com 90 vagas cada no edital 2027.'],
-          ['Vai ter mais simulados?', 'Sim. O Gabarito foi feito para crescer: novos simulados e outras provas de seleção entram aqui no mesmo formato.'],
-        ].map(([p, r]) => `<details><summary>${p}</summary><p>${r}</p></details>`).join('')}
-      </div>
-    </div>
+  <section class="fim-cta" aria-labelledby="t-fim">
+    <div class="page rv"><h2 class="h2" id="t-fim">Pare de ler.<br><span class="dim">Comece a treinar.</span></h2>
+      <a class="btn btn-acc" href="#catalogo">Escolher uma prova</a><p class="small">Grátis, sem cadastro.</p></div>
+    <svg class="contorno" viewBox="0 0 1000 560" aria-hidden="true"><rect x="250" y="40" width="500" height="560" rx="150"/><ellipse cx="400" cy="300" rx="62" ry="84"/><ellipse cx="600" cy="300" rx="62" ry="84"/><path d="M380 470c60 60 180 60 240 0"/></svg>
   </section>
+  </main>
 
-  <section class="wrap cta-final">
-    <h2 class="h-display">Pare de ler.<br><span class="dim">Comece a treinar.</span></h2>
-    <a class="btn btn-acc btn-lg" href="#/simulado/${lista[0].id}">Fazer o Simulado 1</a>
-  </section>
+  <footer><div class="page cols">
+    <div><a class="marca" href="#/">${I.marca}Gabarito</a><p style="margin-top:12px">Simulados inéditos. Sem vínculo com a SEE-PE, a AWS ou outras bancas.</p></div>
+    <div><h4>Provas</h4>${PROVAS.map((p) => `<a href="#catalogo">${esc(p.nome)}</a>`).join('')}</div>
+    <div><h4>Produto</h4><a href="#recursos">Recursos</a><a href="#como">Como funciona</a><a href="#perguntas">Perguntas</a></div>
+    <div><h4>Projeto</h4><a href="https://github.com/mateuseap/gabarito" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/mateuseap/gabarito/issues" target="_blank" rel="noopener">Sugerir uma prova</a><a href="https://github.com/mateuseap/gabarito/blob/main/LICENSE" target="_blank" rel="noopener">Licença MIT</a></div>
+  </div></footer>`;
 
-  <footer><div class="wrap"><span>Gabarito. Questões inéditas, sem vínculo com a SEE-PE.</span><span><a href="https://github.com/mateuseap/gabarito" target="_blank" rel="noopener">Código no GitHub</a></span></div></footer>`;
-
-  // the feature card clock ticks down, as a preview of the real one
-  let s = 3600;
-  tique = setInterval(() => { const el = document.getElementById('relogioDemo'); if (!el) return; s = s > 0 ? s - 1 : 3600; el.firstChild.nodeValue = formatarTempo(s * 1000); }, 1000);
+  ligarTopo(); ligarReveal(); ligarFeats(); ligarAbas();
+  // the feature clock counts down while visible, as a preview of the real one
+  let s = 3600; const t = setInterval(() => { const el = document.getElementById('gaugeT'); if (el) { s = s > 0 ? s - 1 : 3600; el.textContent = formatarTempo(s * 1000); } }, 1000);
+  aoSair(() => clearInterval(t));
 }
 
-function contagem() {
-  // the edital window: 17 to 27 Nov 2026, Recife time
-  const fim = new Date('2026-11-27T23:59:00-03:00').getTime(), ini = new Date('2026-11-17T00:00:00-03:00').getTime(), agora = Date.now();
-  if (agora > fim) return '';
-  const txt = agora >= ini ? `Provas acontecendo agora: até 27 de novembro` : `Provas de 17 a 27 de novembro`;
-  return `<div><span class="contagem"><i></i>${txt}</span></div>`;
+function cartaoProva(p, melhor, i) {
+  const sims = simulados(p);
+  return `<article class="prova-card rv" data-d="${i % 2}" data-cat="${p.categoria}" style="--cor:${p.cor}">
+    <div class="cab"><span class="selo-prova">${esc(p.sigla)}</span><div><h3>${esc(p.nome)}</h3><span class="sub">${esc(p.curto)} · ${p.idioma === 'en' ? 'questões em inglês' : 'em português'}</span></div></div>
+    <p>${esc(p.resumo)}</p>
+    <div class="fatos"><span>${p.formato.questoes} questões</span><span>${p.formato.minutos} min</span><span>${p.formato.alternativas} alternativas</span><span>${sims.length} simulados</span></div>
+    <div class="sims">${sims.map((s) => { const m = melhor(s.id); return `<a class="sim-linha" href="#/simulado/${s.id}"><span class="n">${esc(s.titulo)}</span>${m ? `<span class="m">${esc(m.resultado.nota.valor)}${esc(m.resultado.nota.max)}</span>` : ''}<span class="ir">${I.seta}</span></a>`; }).join('')}</div>
+  </article>`;
+}
+const feat = (ico, t, p, demo) => `<li class="feat"><div class="demo">${demo}</div><div class="txt"><div class="t"><span class="ico">${ico}</span><h3>${t}</h3></div><p>${p}</p></div></li>`;
+
+function ligarFeats() {
+  const row = document.getElementById('feats'), nav = document.getElementById('featsNav'); if (!row) return;
+  row.querySelectorAll('.feat').forEach((c) => c.addEventListener('pointermove', (e) => { const r = c.getBoundingClientRect(); c.style.setProperty('--x', `${e.clientX - r.left}px`); c.style.setProperty('--y', `${e.clientY - r.top}px`); }));
+  const marcar = () => { const w = row.firstElementChild.getBoundingClientRect().width + 20, i = Math.round(row.scrollLeft / w); [...nav.children].forEach((b, k) => b.classList.toggle('on', k === Math.min(i, nav.children.length - 1))); };
+  row.addEventListener('scroll', marcar, { passive: true });
+  // drag to scroll with the mouse, like the reference; snapping is off while dragging
+  let x0 = 0, s0 = 0, arrastando = false;
+  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; arrastando = true; x0 = e.clientX; s0 = row.scrollLeft; row.style.scrollSnapType = 'none'; row.style.cursor = 'grabbing'; });
+  addEventListener('pointermove', (e) => { if (arrastando) row.scrollLeft = s0 - (e.clientX - x0); });
+  const soltar = () => { if (!arrastando) return; arrastando = false; row.style.scrollSnapType = ''; row.style.cursor = ''; };
+  addEventListener('pointerup', soltar);
+  aoSair(() => removeEventListener('pointerup', soltar));
+}
+function ligarAbas() {
+  document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => {
+    document.querySelectorAll('.abas button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
+    document.querySelectorAll('.provas [data-cat], .breve [data-cat]').forEach((el) => { el.hidden = b.dataset.cat !== 'todas' && el.dataset.cat !== b.dataset.cat; });
+  });
 }
 
 // ---------------- exam ----------------
 function telaSimulado(simuladoId) {
-  const prova = PROVAS.find((p) => simuladoId.startsWith(p.id)), sim = prova && simulados(prova).find((s) => s.id === simuladoId);
+  const prova = provaDoSimulado(simuladoId), sim = prova && simulados(prova).find((s) => s.id === simuladoId);
   if (!sim) { location.hash = '#/'; return; }
-  const dados = ler();
-  let t = dados.emAndamento && dados.emAndamento.simuladoId === sim.id ? dados.emAndamento : null;
-  if (!t) {
-    app.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><div>
-      <h3 id="mt">${esc(sim.titulo)}</h3>
-      <p>${prova.formato.questoes} questões, ${prova.formato.minutos} minutos. O cronômetro começa quando você clicar em começar e não pausa. No fim do tempo, a prova fecha sozinha.</p>
-      <div class="acoes"><a class="btn btn-ghost" href="#/">Voltar</a><button class="btn btn-acc" id="comecar">Começar agora</button></div>
-    </div></div>`;
+  let t = ler().emAndamento;
+  if (!t || t.simuladoId !== sim.id) {
+    const outro = t && provaDoSimulado(t.simuladoId);
+    app.innerHTML = `<div class="page-light"></div><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><div>
+      <span class="eyebrow">${esc(prova.nome)}</span><h3 id="mt">${esc(sim.titulo)}</h3>
+      <p>${prova.formato.questoes} questões, ${prova.formato.minutos} minutos. O cronômetro começa quando você clicar em começar e não pausa. No fim do tempo, a prova é entregue sozinha.${prova.idioma === 'en' ? ' As questões são em inglês, como na prova real.' : ''}</p>
+      ${outro ? `<p class="small">Você tem outro simulado em andamento (${esc(outro.nome)}). Começar este descarta aquele.</p>` : ''}
+      <div class="acoes"><a class="btn btn-glass btn-sm" href="#/">Voltar</a><button class="btn btn-acc btn-sm" id="comecar">Começar agora</button></div></div></div>`;
     document.getElementById('comecar').onclick = () => { const d = ler(); d.emAndamento = montarTentativa(sim, (Math.random() * 2 ** 31) | 0); gravar(d); telaSimulado(simuladoId); };
     document.getElementById('comecar').focus();
     return;
@@ -205,135 +274,124 @@ function telaSimulado(simuladoId) {
   let atual = t.atual || 0;
   const fimEm = t.inicio + prova.formato.minutos * 60000;
   const salvar = () => { const d = ler(); d.emAndamento = { ...t, atual }; gravar(d); };
+  const blocos = prova.disciplinas.map((d) => { const idx = t.questoes.map((q, i) => (q.disciplina === d.id ? i + 1 : 0)).filter(Boolean); return `${idx[0]}–${idx[idx.length - 1]}: ${d.curto}`; }).join(' · ');
 
   function render() {
-    const q = t.questoes[atual], disc = prova.disciplinas.find((d) => d.id === q.disciplina), noDisc = t.questoes.slice(0, atual + 1).filter((x) => x.disciplina === q.disciplina).length;
-    const respondidas = Object.keys(t.respostas).length;
-    app.innerHTML = `
-    <div class="prova">
-      <div class="prova-top">
-        <a class="marca" href="#/" aria-label="Sair para o início">${ICONE.marca}</a>
-        <div class="t"><b>${esc(sim.titulo)}</b><span>${respondidas} de ${t.questoes.length} respondidas</span></div>
-        <span class="timer" id="timer" role="timer" aria-label="Tempo restante">--:--</span>
-        <button class="btn btn-acc" id="entregar">Entregar</button>
-      </div>
+    const q = t.questoes[atual], disc = prova.disciplinas.find((d) => d.id === q.disciplina);
+    const resp = Object.keys(t.respostas).length;
+    app.innerHTML = `<div class="page-light"></div><div class="prova">
+      <div><div class="prova-top">
+        <a class="marca" href="#/" aria-label="Sair para o início">${I.marca}</a>
+        <div class="t"><b>${esc(prova.curto)} · ${esc(sim.titulo)}</b><span>${resp} de ${t.questoes.length} respondidas</span></div>
+        <span class="timer" id="timer" role="timer" aria-label="Tempo restante">${I.relogio}<span>--:--</span></span>
+        <button class="btn btn-acc btn-sm" id="entregar">Entregar</button></div>
+        <div class="progresso"><i style="width:${(resp / t.questoes.length) * 100}%"></i></div></div>
       <div class="prova-corpo">
         <div class="questao">
-          <span class="disc">${esc(disc.nome)} <span>· questão ${atual + 1} de ${t.questoes.length} · ${noDisc}ª de ${disc.nome.split(' ').pop()}</span></span>
+          <span class="disc">${esc(disc.nome)} <span>· questão ${atual + 1} de ${t.questoes.length}</span></span>
           ${q.texto ? `<div class="texto-base"><h4>${esc(q.texto.titulo)}</h4><p>${esc(q.texto.corpo)}</p></div>` : ''}
           <p class="enunciado">${esc(q.enunciado)}</p>
           <div class="alts" role="radiogroup" aria-label="Alternativas">
             ${q.alternativas.map((a, i) => `<button class="alt" role="radio" aria-checked="${t.respostas[atual] === a}" data-a="${esc(a)}"><span class="l">${LETRAS[i]}</span><span>${esc(a)}</span></button>`).join('')}
           </div>
         </div>
-        <nav class="mapa" aria-label="Questões">
-          <h5>Questões</h5>
+        <nav class="mapa" aria-label="Questões"><h5>Questões</h5>
           <div class="grade">${t.questoes.map((x, i) => `<button class="${t.respostas[i] !== undefined ? 'feita' : ''} ${i === atual ? 'atual' : ''}" data-i="${i}" aria-label="Questão ${i + 1}${t.respostas[i] !== undefined ? ', respondida' : ''}">${i + 1}</button>`).join('')}</div>
-          <span class="micro">1 a 10: Português · 11 a 20: Matemática</span>
-        </nav>
+          <span class="legenda">${esc(blocos)}</span></nav>
       </div>
-      <div class="prova-pe">
-        <button class="btn btn-ghost" id="ant" ${atual === 0 ? 'disabled' : ''}>← Anterior</button>
-        <button class="btn btn-ghost" id="prox" ${atual === t.questoes.length - 1 ? 'disabled' : ''}>Próxima →</button>
-      </div>
+      <div class="prova-pe"><button class="btn btn-glass btn-sm" id="ant" ${atual === 0 ? 'disabled' : ''}>← Anterior</button><span class="small">Teclas: setas para navegar, ${LETRAS.slice(0, prova.formato.alternativas).split('').join(', ')} para marcar</span><button class="btn btn-glass btn-sm" id="prox" ${atual === t.questoes.length - 1 ? 'disabled' : ''}>Próxima →</button></div>
     </div>`;
-    app.querySelectorAll('.alt').forEach((b) => b.onclick = () => { t.respostas[atual] = b.dataset.a; salvar(); render(); });
-    app.querySelectorAll('.grade button').forEach((b) => b.onclick = () => { atual = +b.dataset.i; salvar(); render(); });
-    document.getElementById('ant').onclick = () => { atual--; salvar(); render(); };
-    document.getElementById('prox').onclick = () => { atual++; salvar(); render(); };
+    app.querySelectorAll('.alt').forEach((b) => b.onclick = () => marcar(b.dataset.a));
+    app.querySelectorAll('.grade button').forEach((b) => b.onclick = () => ir(+b.dataset.i));
+    document.getElementById('ant').onclick = () => ir(atual - 1);
+    document.getElementById('prox').onclick = () => ir(atual + 1);
     document.getElementById('entregar').onclick = confirmar;
-    atualizarTimer();
+    tick();
   }
-  function atualizarTimer() {
+  const marcar = (a) => { t.respostas[atual] = a; salvar(); render(); };
+  const ir = (i) => { atual = Math.max(0, Math.min(t.questoes.length - 1, i)); salvar(); render(); scrollTo({ top: 0 }); };
+  const teclas = (e) => {
+    if (document.querySelector('.modal') || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === 'ArrowRight') ir(atual + 1);
+    else if (e.key === 'ArrowLeft') ir(atual - 1);
+    else { const k = LETRAS.indexOf(e.key.toUpperCase()); const q = t.questoes[atual]; if (k >= 0 && k < q.alternativas.length) marcar(q.alternativas[k]); }
+  };
+  addEventListener('keydown', teclas); aoSair(() => removeEventListener('keydown', teclas));
+  function tick() {
     const resta = fimEm - Date.now(), el = document.getElementById('timer');
     if (resta <= 0) return entregar(true);
-    if (el) { el.textContent = formatarTempo(resta); el.classList.toggle('alerta', resta < 5 * 60000); }
+    if (el) { el.lastElementChild.textContent = formatarTempo(resta); el.classList.toggle('alerta', resta < 5 * 60000); }
   }
   function confirmar() {
     const falta = t.questoes.length - Object.keys(t.respostas).length;
     const m = document.createElement('div'); m.className = 'modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
-    m.innerHTML = `<div><h3>Entregar a prova?</h3><p>${falta ? `Você ainda tem ${falta} ${falta === 1 ? 'questão' : 'questões'} sem resposta. Na prova real, questão em branco vale zero.` : 'Todas as questões estão respondidas.'}</p><div class="acoes"><button class="btn btn-ghost" id="nao">Continuar</button><button class="btn btn-acc" id="sim">Entregar</button></div></div>`;
+    m.innerHTML = `<div><h3>Entregar a prova?</h3><p>${falta ? `Você tem ${falta} ${falta === 1 ? 'questão' : 'questões'} sem resposta. Em branco vale zero.` : 'Todas as questões estão respondidas.'}</p><div class="acoes"><button class="btn btn-glass btn-sm" id="nao">Continuar</button><button class="btn btn-acc btn-sm" id="sim">Entregar</button></div></div>`;
     document.body.append(m);
     m.querySelector('#nao').onclick = () => m.remove();
     m.querySelector('#sim').onclick = () => { m.remove(); entregar(false); };
     m.querySelector('#sim').focus();
   }
   function entregar(acabouTempo) {
-    clearInterval(tique);
     const d = ler(), resultado = corrigir(prova, t);
-    const feito = { id: `${Date.now().toString(36)}`, simuladoId: sim.id, fim: Date.now(), duracao: Math.min(Date.now(), fimEm) - t.inicio, acabouTempo, semente: t.semente, respostas: t.respostas, resultado };
+    const feito = { id: Date.now().toString(36), simuladoId: sim.id, fim: Date.now(), duracao: Math.min(Date.now(), fimEm) - t.inicio, acabouTempo, semente: t.semente, respostas: t.respostas, resultado };
     d.tentativas.push(feito); d.emAndamento = null; gravar(d);
     location.hash = `#/resultado/${feito.id}`;
   }
-  tique = setInterval(atualizarTimer, 1000);
+  const iv = setInterval(tick, 1000); aoSair(() => clearInterval(iv));
   render();
 }
 
 // ---------------- result and review ----------------
 function telaResultado(id, revisao) {
   const { tentativas } = ler(), feito = tentativas.find((x) => x.id === id);
-  if (!feito) { location.hash = '#/'; return; }
-  const prova = PROVAS.find((p) => feito.simuladoId.startsWith(p.id)), sim = simulados(prova).find((s) => s.id === feito.simuladoId);
-  const t = { ...montarTentativa(sim, feito.semente), respostas: feito.respostas }, r = feito.resultado;
-  if (revisao) return telaRevisao(prova, sim, t, feito);
-  const anteriores = tentativas.filter((x) => x.simuladoId === feito.simuladoId && x.id !== feito.id);
-  const antes = anteriores.length ? anteriores[anteriores.length - 1].resultado.total : null;
-  const porMin = feito.duracao / t.questoes.length;
-  app.innerHTML = `
-  <nav class="nav" aria-label="Principal"><a class="marca" href="#/">${ICONE.marca} Gabarito</a><div class="links"></div><a class="btn btn-ghost" href="#/">Início</a></nav>
+  const prova = feito && provaDoSimulado(feito.simuladoId), sim = prova && simulados(prova).find((s) => s.id === feito.simuladoId);
+  if (!sim) { location.hash = '#/'; return; }
+  const t = { ...montarTentativa(sim, feito.semente), respostas: feito.respostas };
+  const r = corrigir(prova, t);
+  if (revisao) return telaRevisao(prova, sim, t, feito, r);
+  const anteriores = tentativas.filter((x) => x.simuladoId === feito.simuladoId && x.fim < feito.fim);
+  const antes = anteriores.length ? anteriores[anteriores.length - 1] : null;
+  const prox = simulados(prova)[sim.numero];
+  app.innerHTML = `<div class="page-light"></div>
+  ${cabecalho('<a class="btn btn-glass btn-sm" href="#/">Início</a>', false)}
   <main class="resultado">
-    <div class="nota">
-      <span class="eyebrow">${esc(sim.titulo)}${feito.acabouTempo ? ' · o tempo acabou' : ''}</span>
-      <div class="v">${r.total}<small>/${r.maximo}</small></div>
-      <span class="selo ${r.eliminado ? 'mal' : ''}">${r.eliminado ? 'Na prova real, essa nota eliminaria' : r.total >= 15 ? 'Ótimo resultado' : r.total >= 10 ? 'Passou da linha de corte do edital' : 'Não eliminado, mas dá para subir'}</span>
-      ${antes !== null ? `<p class="micro" style="margin-top:10px">Na tentativa anterior deste simulado: ${antes}/20 (${r.total - antes >= 0 ? '+' : ''}${r.total - antes})</p>` : ''}
-    </div>
+    <div class="nota rv"><span class="eyebrow">${esc(prova.nome)} · ${esc(sim.titulo)}${feito.acabouTempo ? ' · o tempo acabou' : ''}</span>
+      <div class="v">${esc(r.nota.valor)}<small>${esc(r.nota.max)}</small></div>
+      <span class="selo ${r.avaliacao.status}">${esc(r.avaliacao.texto)}</span>
+      ${antes ? `<p class="small" style="margin-top:12px">Na tentativa anterior: ${esc(antes.resultado.nota.valor)}${esc(antes.resultado.nota.max)}</p>` : ''}</div>
     <div class="res-grid">
-      ${r.porDisciplina.map((d) => `<div class="card"><div class="k">${esc(d.nome)}</div><div class="v">${d.acertos}<small style="font-size:18px;color:var(--muted)"> /${d.total}</small></div><div class="barras-demo" style="margin-top:10px"><div class="t"><i style="width:${(d.acertos / d.total) * 100}%"></i></div></div></div>`).join('')}
-      <div class="card"><div class="k">Tempo usado</div><div class="v">${formatarTempo(feito.duracao)}</div><div class="micro">${formatarTempo(porMin)} por questão, em média</div></div>
-      <div class="card"><div class="k">Desempate</div><div class="v" style="font-size:22px;margin-top:6px">Português conta mais</div><div class="micro">No empate, ganha a maior nota de Português.</div></div>
+      ${r.porDisciplina.map((d, i) => `<div class="card rv" data-d="${i % 3}"><div class="k">${esc(d.nome)}</div><div class="v big">${d.acertos}<small style="font-size:18px;color:var(--muted)"> /${d.total}</small></div><div class="barras"><div class="t"><i style="--w:${(d.acertos / d.total) * 100}%"></i></div></div></div>`).join('')}
+      <div class="card rv"><div class="k">Tempo usado</div><div class="v big">${formatarTempo(feito.duracao)}</div><div class="small">${formatarTempo(feito.duracao / t.questoes.length)} por questão, em média</div></div>
+      <div class="card rv"><div class="k">Acertos</div><div class="v big">${r.acertos}<small style="font-size:18px;color:var(--muted)"> /${r.total}</small></div><div class="small">${esc(prova.dicaResultado)}</div></div>
     </div>
-    <div class="card revisar">
-      <div class="k" style="margin-bottom:6px">${r.revisar.length ? 'O que revisar' : 'Nenhum assunto para revisar neste simulado'}</div>
-      <ul>${r.revisar.map((x) => `<li>${esc(x.topico)} <span>${x.certas}/${x.total} · ${x.disciplina === 'pt' ? 'Português' : 'Matemática'}</span></li>`).join('')}</ul>
-    </div>
-    <div class="res-acoes">
-      <a class="btn btn-acc" href="#/revisao/${feito.id}">Ver correção questão por questão</a>
-      <a class="btn btn-ghost" href="#/simulado/${sim.id}">Refazer</a>
-      ${simulados(prova).find((s) => s.numero === sim.numero + 1) ? `<a class="btn btn-ghost" href="#/simulado/${simulados(prova)[sim.numero].id}">Próximo simulado</a>` : ''}
-    </div>
+    <div class="card revisar rv"><div class="k">${r.revisar.length ? 'O que revisar' : 'Nenhum assunto para revisar neste simulado'}</div>
+      <ul>${r.revisar.map((x) => `<li>${esc(x.topico)} <span>${x.certas}/${x.total} · ${esc(prova.disciplinas.find((d) => d.id === x.disciplina).curto)}</span></li>`).join('')}</ul></div>
+    <div class="res-acoes"><a class="btn btn-acc" href="#/revisao/${feito.id}">Ver a correção</a><a class="btn btn-glass" href="#/simulado/${sim.id}">Refazer</a>${prox ? `<a class="btn btn-glass" href="#/simulado/${prox.id}">Próximo simulado</a>` : ''}</div>
   </main>`;
+  ligarTopo(); ligarReveal();
 }
 
-function telaRevisao(prova, sim, t, feito) {
+function telaRevisao(prova, sim, t, feito, r) {
   let atual = 0;
   function render() {
     const q = t.questoes[atual], disc = prova.disciplinas.find((d) => d.id === q.disciplina), resp = t.respostas[atual];
-    app.innerHTML = `
-    <div class="prova">
-      <div class="prova-top">
-        <a class="marca" href="#/" aria-label="Início">${ICONE.marca}</a>
-        <div class="t"><b>Correção · ${esc(sim.titulo)}</b><span>${feito.resultado.total}/20</span></div>
-        <a class="btn btn-ghost" href="#/resultado/${feito.id}">Resumo</a>
-      </div>
+    app.innerHTML = `<div class="page-light"></div><div class="prova">
+      <div class="prova-top"><a class="marca" href="#/" aria-label="Início">${I.marca}</a>
+        <div class="t"><b>Correção · ${esc(sim.titulo)}</b><span>${esc(r.nota.valor)}${esc(r.nota.max)} · ${r.acertos} de ${r.total} certas</span></div>
+        <a class="btn btn-glass btn-sm" href="#/resultado/${feito.id}">Resumo</a></div>
       <div class="prova-corpo">
         <div class="questao">
           <span class="disc">${esc(disc.nome)} <span>· questão ${atual + 1} · ${esc(q.topico)}</span></span>
           ${q.texto ? `<div class="texto-base"><h4>${esc(q.texto.titulo)}</h4><p>${esc(q.texto.corpo)}</p></div>` : ''}
           <p class="enunciado">${esc(q.enunciado)}</p>
-          <div class="alts">${q.alternativas.map((a, i) => `<div class="alt ${a === q.certa ? 'certa' : a === resp ? 'errada' : ''}"><span class="l">${LETRAS[i]}</span><span>${esc(a)}${a === q.certa ? ' ✓' : a === resp ? ' (sua resposta)' : ''}</span></div>`).join('')}</div>
-          ${resp === undefined ? '<p class="micro">Você deixou esta questão em branco.</p>' : ''}
-          <p class="explica">${esc(q.explicacao)}</p>
+          <div class="alts">${q.alternativas.map((a, i) => `<div class="alt ${a === q.certa ? 'certa' : a === resp ? 'errada' : ''}"><span class="l">${LETRAS[i]}</span><span>${esc(a)}${a === resp && a !== q.certa ? ' <span class="small">(sua resposta)</span>' : ''}</span></div>`).join('')}</div>
+          ${resp === undefined ? '<p class="small">Você deixou esta questão em branco.</p>' : ''}
+          <p class="explica">${I.luz}<span>${esc(q.explicacao)}</span></p>
         </div>
-        <nav class="mapa" aria-label="Questões">
-          <h5>Questões</h5>
-          <div class="grade">${t.questoes.map((x, i) => `<button class="${t.respostas[i] === x.certa ? 'certa' : 'errada'} ${i === atual ? 'atual' : ''}" data-i="${i}" aria-label="Questão ${i + 1}, ${t.respostas[i] === x.certa ? 'certa' : 'errada'}">${i + 1}</button>`).join('')}</div>
-        </nav>
+        <nav class="mapa" aria-label="Questões"><h5>Questões</h5>
+          <div class="grade">${t.questoes.map((x, i) => `<button class="${t.respostas[i] === x.certa ? 'certa' : 'errada'} ${i === atual ? 'atual' : ''}" data-i="${i}" aria-label="Questão ${i + 1}, ${t.respostas[i] === x.certa ? 'certa' : 'errada'}">${i + 1}</button>`).join('')}</div></nav>
       </div>
-      <div class="prova-pe">
-        <button class="btn btn-ghost" id="ant" ${atual === 0 ? 'disabled' : ''}>← Anterior</button>
-        <button class="btn btn-ghost" id="prox" ${atual === t.questoes.length - 1 ? 'disabled' : ''}>Próxima →</button>
-      </div>
+      <div class="prova-pe"><button class="btn btn-glass btn-sm" id="ant" ${atual === 0 ? 'disabled' : ''}>← Anterior</button><span></span><button class="btn btn-glass btn-sm" id="prox" ${atual === t.questoes.length - 1 ? 'disabled' : ''}>Próxima →</button></div>
     </div>`;
     app.querySelectorAll('.grade button').forEach((b) => b.onclick = () => { atual = +b.dataset.i; render(); });
     document.getElementById('ant').onclick = () => { atual--; render(); };
@@ -344,21 +402,20 @@ function telaRevisao(prova, sim, t, feito) {
 
 // ---------------- router ----------------
 function rota() {
-  clearInterval(tique);
-  document.querySelector('.modal')?.remove();
+  limpar.forEach((f) => f()); limpar = [];
+  document.querySelectorAll('.modal').forEach((m) => m.remove());
   const h = location.hash;
   let m;
   if ((m = h.match(/^#\/simulado\/([\w-]+)$/))) telaSimulado(m[1]);
   else if ((m = h.match(/^#\/resultado\/(\w+)$/))) telaResultado(m[1], false);
   else if ((m = h.match(/^#\/revisao\/(\w+)$/))) telaResultado(m[1], true);
   else {
-    landing();
+    if (!document.getElementById('inicio')) landing();
     const ancora = h.startsWith('#') && !h.startsWith('#/') ? document.getElementById(h.slice(1)) : null;
-    if (ancora) ancora.scrollIntoView(); else scrollTo(0, 0);
+    if (ancora) ancora.scrollIntoView(); else if (h.startsWith('#/')) scrollTo(0, 0);
     return;
   }
   scrollTo(0, 0);
 }
 addEventListener('hashchange', rota);
 rota();
-
