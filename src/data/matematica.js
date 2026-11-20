@@ -44,4 +44,43 @@ export const MATEMATICA = [
     q('Semelhança de triângulos', 'Um poste projeta uma sombra de 6 m no mesmo instante em que uma pessoa de 1,5 m projeta uma sombra de 2 m. Qual é a altura do poste?', '4,5 m', ['3 m', '4 m', '6 m', '8 m'], 'Triângulos semelhantes: 1,5/2 = h/6, então h = 6 × 1,5 ÷ 2 = 4,5 m.'),
     q('Divisão proporcional', 'R$ 600,00 serão divididos entre duas pessoas em partes inversamente proporcionais a 2 e 3. Quanto recebe quem tem o número 2?', 'R$ 360,00', ['R$ 200,00', 'R$ 240,00', 'R$ 300,00', 'R$ 400,00'], 'Inversamente a 2 e 3 = diretamente a 1/2 e 1/3, ou 3 e 2. 600 ÷ 5 = 120. 3 × 120 = 360.'),
   ],
+  // ---------- simulado 4 ----------
+  [
+    q('Quatro operações', 'Um ônibus sai com 42 passageiros. No primeiro ponto descem 15 e sobem 9. No segundo, descem 12 e sobem 20. Quantos passageiros seguem viagem?', '44', ['36', '40', '42', '48'], '42 − 15 + 9 = 36. 36 − 12 + 20 = 44.'),
+    q('Números decimais', 'Qual é o resultado de 3,6 ÷ 0,12?', '30', ['0,3', '3', '0,03', '300'], '3,6 ÷ 0,12 = 360 ÷ 12 = 30.'),
+    q('Porcentagem', 'Um salário de R$ 1.500,00 teve aumento de 8%. Qual é o novo salário?', 'R$ 1.620,00', ['R$ 1.508,00', 'R$ 1.580,00', 'R$ 1.600,00', 'R$ 1.680,00'], '8% de 1500 = 120. 1500 + 120 = 1620.'),
+    q('Razão e proporção', 'Num mapa, 1 cm representa 5 km. Duas cidades estão a 7,4 cm de distância no mapa. Qual é a distância real?', '37 km', ['12,4 km', '35 km', '37,5 km', '74 km'], '7,4 × 5 = 37 km.'),
+    q('Equações do 1º grau', 'Resolva: 2(x − 3) = x + 4.', 'x = 10', ['x = 1', 'x = 2', 'x = 7', 'x = −10'], '2x − 6 = x + 4, então x = 10.'),
+    q('Radiciação', 'Qual é o valor de √50, aproximado para uma casa decimal?', '7,1', ['6,9', '7,0', '7,5', '25,0'], '7² = 49 e 7,1² = 50,41. Então √50 ≈ 7,1.'),
+    q('Médias', 'A média aritmética de 5 números é 12. Se retirarmos o número 20, qual é a média dos 4 que sobram?', '10', ['8', '11', '12', '13'], 'Soma dos 5 = 60. Sem o 20, a soma é 40. 40 ÷ 4 = 10.'),
+    q('Polígonos', 'Quantas diagonais tem um pentágono?', '5', ['2', '3', '10', '15'], 'd = n(n − 3)/2 = 5 · 2 / 2 = 5.'),
+    q('Triângulos', 'Num triângulo isósceles, o ângulo do vértice mede 40°. Quanto mede cada um dos ângulos da base?', '70°', ['40°', '50°', '60°', '140°'], 'Os ângulos da base são iguais: (180° − 40°) ÷ 2 = 70°.'),
+    q('Sistemas de medidas', 'Quantos centímetros quadrados há em 1,5 m²?', '15.000 cm²', ['150 cm²', '1.500 cm²', '150.000 cm²', '15 cm²'], '1 m² = 10.000 cm². 1,5 × 10.000 = 15.000 cm².'),
+  ],
+  // ---------- simulado 5 ----------
+  [
+    q('Frações', 'Qual é o resultado de 3/4 ÷ 3/8?', '2', ['1/2', '9/32', '3/2', '6'], 'Dividir por uma fração é multiplicar pelo inverso: 3/4 × 8/3 = 24/12 = 2.'),
+    q('Expressões numéricas', 'Qual é o valor de (−3)² − 2 · (−4) + 5?', '22', ['−4', '6', '8', '12'], '(−3)² = 9. −2 · (−4) = +8. 9 + 8 + 5 = 22.'),
+    q('Regra de três simples', 'Um carro faz 12 km com 1 litro de gasolina. Quantos litros ele gasta para percorrer 300 km?', '25 L', ['20 L', '24 L', '30 L', '36 L'], '300 ÷ 12 = 25 litros.'),
+    q('Regra de três composta', '6 máquinas produzem 900 peças em 5 horas. Quantas peças 4 máquinas produzem em 8 horas, no mesmo ritmo?', '960', ['600', '720', '1.080', '1.200'], 'Cada máquina faz 900 ÷ 6 ÷ 5 = 30 peças por hora. 4 × 8 × 30 = 960.'),
+    q('Porcentagem', 'Depois de um desconto de 20%, uma blusa passou a custar R$ 64,00. Qual era o preço original?', 'R$ 80,00', ['R$ 76,80', 'R$ 77,00', 'R$ 84,00', 'R$ 128,00'], 'R$ 64 corresponde a 80% do preço. 64 ÷ 0,8 = 80.'),
+    q('Produtos notáveis', 'Qual é o desenvolvimento de (2x − 3)²?', '4x² − 12x + 9', ['4x² − 9', '4x² + 9', '2x² − 12x + 9', '4x² − 6x + 9'], '(a − b)² = a² − 2ab + b² = 4x² − 2 · 2x · 3 + 9.'),
+    q('Sistemas lineares', 'Numa lanchonete, 2 sucos e 1 sanduíche custam R$ 17,00; 1 suco e 2 sanduíches custam R$ 22,00. Quanto custa um sanduíche?', 'R$ 9,00', ['R$ 4,00', 'R$ 5,00', 'R$ 8,00', 'R$ 13,00'], '2s + x = 17 e s + 2x = 22. Multiplicando a 2ª por 2: 2s + 4x = 44. Subtraindo: 3x = 27, x = 9.'),
+    q('Ângulos', 'Quanto mede o ângulo formado pelos ponteiros de um relógio às 3h em ponto?', '90°', ['30°', '45°', '60°', '120°'], 'Cada hora do relógio corresponde a 360° ÷ 12 = 30°. De 12 a 3 são 3 × 30° = 90°.'),
+    q('Cevianas', 'Num triângulo, o segmento que liga um vértice ao ponto médio do lado oposto chama-se:', 'mediana.', ['altura.', 'bissetriz.', 'mediatriz.', 'diagonal.'], 'Mediana vai do vértice ao ponto médio do lado oposto. Altura é perpendicular ao lado; bissetriz divide o ângulo ao meio.'),
+    q('Potenciação', 'Qual é o valor de 2³ · 2⁴ ÷ 2⁵?', '4', ['2', '8', '16', '32'], 'Mesma base: some e subtraia expoentes. 3 + 4 − 5 = 2, e 2² = 4.'),
+  ],
+  // ---------- simulado 6 ----------
+  [
+    q('Quatro operações', 'Uma caixa tem 24 ovos. Uma padaria usa 9 dúzias por dia. Quantas caixas ela gasta em uma semana de 6 dias de trabalho?', '27', ['18', '24', '36', '54'], '9 dúzias = 108 ovos por dia. 108 × 6 = 648. 648 ÷ 24 = 27 caixas.'),
+    q('Números decimais', 'Ordene do menor para o maior: 0,5; 0,45; 0,405; 0,54.', '0,405 < 0,45 < 0,5 < 0,54', ['0,5 < 0,45 < 0,405 < 0,54', '0,45 < 0,405 < 0,5 < 0,54', '0,405 < 0,5 < 0,45 < 0,54', '0,54 < 0,5 < 0,45 < 0,405'], 'Com três casas: 0,405; 0,450; 0,500; 0,540.'),
+    q('Divisão proporcional', 'Três irmãos de 8, 10 e 12 anos vão dividir R$ 450,00 em partes diretamente proporcionais às idades. Quanto recebe o mais velho?', 'R$ 180,00', ['R$ 120,00', 'R$ 150,00', 'R$ 160,00', 'R$ 200,00'], '8 + 10 + 12 = 30. 450 ÷ 30 = 15. 12 × 15 = 180.'),
+    q('Médias', 'Qual é a média geométrica entre 4 e 9?', '6', ['5', '6,5', '13', '36'], 'Média geométrica = √(4 · 9) = √36 = 6.'),
+    q('Polinômios', 'Qual é o resultado de (3x² + 2x − 1) + (x² − 5x + 4)?', '4x² − 3x + 3', ['4x² + 3x + 3', '3x² − 3x + 3', '4x² − 7x + 5', '2x² + 7x − 5'], 'Some os termos semelhantes: 3x² + x² = 4x²; 2x − 5x = −3x; −1 + 4 = 3.'),
+    q('Fatoração', 'A forma fatorada de x² + 6x + 9 é:', '(x + 3)²', ['(x − 3)²', '(x + 3)(x − 3)', 'x(x + 6) + 9', '(x + 9)(x + 1)'], 'É trinômio quadrado perfeito: x² + 2 · 3 · x + 3² = (x + 3)².'),
+    q('Equações do 1º grau', 'Mariana tem o dobro da idade de Pedro. Juntos, eles têm 36 anos. Quantos anos tem Mariana?', '24', ['12', '18', '20', '27'], 'Pedro = x, Mariana = 2x. 3x = 36, x = 12. Mariana tem 24.'),
+    q('Polígonos', 'Quanto mede cada ângulo interno de um octógono regular?', '135°', ['108°', '120°', '144°', '1.080°'], 'Soma = (8 − 2) × 180° = 1080°. 1080° ÷ 8 = 135°.'),
+    q('Lei angular de Tales', 'Num triângulo, um ângulo externo mede 110° e um dos ângulos internos não adjacentes a ele mede 50°. Quanto mede o outro ângulo interno não adjacente?', '60°', ['40°', '50°', '70°', '130°'], 'O ângulo externo é igual à soma dos dois internos não adjacentes: 110° − 50° = 60°.'),
+    q('Sistemas de medidas', 'Uma garrafa tem 1,5 L de suco. Quantos copos de 250 mL dá para encher?', '6', ['4', '5', '7', '60'], '1,5 L = 1500 mL. 1500 ÷ 250 = 6.'),
+  ],
 ];

@@ -13,7 +13,7 @@ export function embaralhar(lista, rnd) {
   return a;
 }
 
-/** Builds the attempt: every question gets its 5 alternatives in a seeded order. */
+/** Builds the attempt: every question gets its alternatives in a seeded order. */
 export function montarTentativa(simulado, semente) {
   const rnd = aleatorio(semente);
   return {
@@ -25,22 +25,23 @@ export function montarTentativa(simulado, semente) {
   };
 }
 
-/** Scores an attempt against the exam rules. */
+/** Scores an attempt; the exam decides what the score means through `avaliar` and `nota`. */
 export function corrigir(prova, tentativa) {
   const porDisciplina = prova.disciplinas.map((d) => {
     const qs = tentativa.questoes.map((q, i) => ({ q, i })).filter(({ q }) => q.disciplina === d.id);
     const acertos = qs.filter(({ q, i }) => tentativa.respostas[i] === q.certa).length;
-    return { id: d.id, nome: d.nome, acertos, total: qs.length };
+    return { id: d.id, nome: d.nome, curto: d.curto, acertos, total: qs.length };
   });
-  const total = porDisciplina.reduce((s, d) => s + d.acertos, 0) * prova.formato.pontosPorQuestao;
+  const acertos = porDisciplina.reduce((s, d) => s + d.acertos, 0);
   const topicos = new Map();
   tentativa.questoes.forEach((q, i) => {
     const t = topicos.get(q.topico) || { topico: q.topico, disciplina: q.disciplina, certas: 0, total: 0 };
     t.total++; if (tentativa.respostas[i] === q.certa) t.certas++;
     topicos.set(q.topico, t);
   });
-  const r = { total, maximo: tentativa.questoes.length * prova.formato.pontosPorQuestao, porDisciplina, revisar: [...topicos.values()].filter((t) => t.certas < t.total) };
-  r.eliminado = prova.eliminado(r);
+  const r = { acertos, total: tentativa.questoes.length, porDisciplina, revisar: [...topicos.values()].filter((t) => t.certas < t.total) };
+  r.avaliacao = prova.avaliar(r);
+  r.nota = prova.nota(r);
   return r;
 }
 
