@@ -308,7 +308,15 @@ function telaSimulado(simuladoId) {
     document.getElementById('entregar').onclick = confirmar;
     tick();
   }
-  const marcar = (a) => { t.respostas[atual] = a; salvar(); render(); };
+  // selecting only touches what changed: re-rendering would replay the entry animation and reset the text scroll
+  const marcar = (a) => {
+    t.respostas[atual] = a; salvar();
+    app.querySelectorAll('.alt').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.a === a)));
+    app.querySelector(`.grade button[data-i="${atual}"]`)?.classList.add('feita');
+    const n = Object.keys(t.respostas).length;
+    app.querySelector('.prova-top .t span').textContent = `${n} de ${t.questoes.length} respondidas`;
+    app.querySelector('.progresso i').style.width = `${(n / t.questoes.length) * 100}%`;
+  };
   const ir = (i) => { atual = Math.max(0, Math.min(t.questoes.length - 1, i)); salvar(); render(); scrollTo({ top: 0 }); };
   const teclas = (e) => {
     if (document.querySelector('.modal') || e.altKey || e.ctrlKey || e.metaKey) return;
