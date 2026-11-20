@@ -44,9 +44,10 @@ const MASCOTE = `<svg class="mascote" viewBox="0 0 120 120" aria-hidden="true">
 
 // ---------------- shared bits ----------------
 function cabecalho(acao = `<a class="btn btn-acc btn-sm" href="#catalogo">Ver simulados</a>`, links = true) {
+  const feitos = ler().tentativas.length;
   return `<header class="topo" id="topo"><div class="barra">
     <a class="marca" href="#/">${I.marca}Gabarito</a>
-    ${links ? `<nav aria-label="Principal"><a href="#painel">Painel</a><a href="#catalogo">Simulados</a><a href="#recursos">Recursos</a><a href="#perguntas">Perguntas</a></nav>` : ''}
+    ${links ? `<nav aria-label="Principal"><a href="#/painel">Meu painel${feitos ? ` <span class="contador">${feitos}</span>` : ''}</a><a href="#catalogo">Simulados</a><a href="#recursos">Recursos</a><a href="#perguntas">Perguntas</a></nav>` : ''}
     ${acao}</div></header>`;
 }
 function ligarTopo() {
@@ -108,7 +109,7 @@ function abaPainel(aba) {
       const n = st ? (st.dias.has(dia) ? 4 : 0) : [0, 1, 0, 2, 3, 0, 1, 4, 2, 0, 3, 1, 0, 2, 4][(i * 7 + (i >> 3)) % 15] * (i > 40 ? 1 : i % 3 === 0 ? 1 : 0);
       return `<b data-n="${n}"></b>`;
     }).join('');
-    return `<div class="filtro"><span class="pill">${st ? 'Todos os simulados' : 'Últimos 30 dias'}</span>${st ? `<span class="pill acc">${st.feitos} feitos</span>` : exemplo}</div>
+    return `<div class="filtro"><span class="pill">${st ? 'Todos os simulados' : 'Últimos 30 dias'}</span>${st ? `<span class="pill acc">${st.feitos} ${st.feitos === 1 ? 'feito' : 'feitos'}</span>` : exemplo}</div>
       <div class="card full"><div class="k">Acertos nos simulados</div>
         <div class="v big">${st ? pctTxt(st.melhor) : '82%'}<span class="delta">↑ ${st ? 'melhor nota' : '40 pontos'}</span></div>
         <svg class="grafico" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a8e05f" stop-opacity=".3"/><stop offset="1" stop-color="#a8e05f" stop-opacity="0"/></linearGradient></defs>
@@ -123,7 +124,7 @@ function abaPainel(aba) {
     const linhas = st
       ? [...tentativas].reverse().slice(0, 8).map((t) => { const p = provaDoSimulado(t.simuladoId), s = p && simulados(p).find((x) => x.id === t.simuladoId); return p && { p, titulo: s?.titulo || '', nota: `${t.resultado.nota.valor}${t.resultado.nota.max}`, pct: t.resultado.acertos / t.resultado.total, quando: dataCurta(t.fim), href: `#/resultado/${t.id}` }; }).filter(Boolean)
       : EXEMPLO_HIST.map((x) => { const p = PROVAS.find((y) => y.id === x.prova); return { p, titulo: x.sim, nota: x.nota, pct: x.pct, quando: dataCurta(Date.now() - x.dias * 864e5), href: '' }; });
-    return `<div class="filtro"><span class="pill">${st ? `Últimos ${linhas.length} simulados` : 'Seus simulados aparecem aqui'}</span>${exemplo}</div>
+    return `<div class="filtro"><span class="pill">${st ? (linhas.length === 1 ? 'Seu simulado' : `Últimos ${linhas.length} simulados`) : 'Seus simulados aparecem aqui'}</span>${exemplo}</div>
       <div class="card full lista-painel">${linhas.map((l) => `<${l.href ? `a href="${l.href}"` : 'div'} class="linha-painel">
         <span class="selo-prova mini" style="--cor:${l.p.cor}">${esc(l.p.sigla)}</span>
         <span class="nome"><b>${esc(l.p.nome)}</b><span>${esc(l.titulo)} · ${l.quando}</span></span>
@@ -153,22 +154,23 @@ function abaPainel(aba) {
     : '<div class="card full vazio"><span>Nenhum erro até agora. Continue assim.</span></div>'}`;
 }
 
-function painel() {
+function painel(inicial = 'progresso', pagina = false) {
   const st = estatisticas();
-  return `<section class="janela-sec page rv" id="painel" aria-label="${st ? 'Seu painel' : 'Painel de exemplo'}">
+  return `<section class="janela-sec page ${pagina ? 'janela-pagina' : 'rv'}" id="painel" aria-label="${st ? 'Seu painel' : 'Painel de exemplo'}">
     <div class="janela"><div class="luzes"><i></i><i></i><i></i></div>
       <div class="app">
         <aside><div class="marca">${I.marca}Gabarito</div>
           <div class="abas-painel" role="tablist" aria-label="Painel" aria-orientation="vertical">
-            ${ABAS.map(([id, nome, ico], i) => `<button class="it ${i ? '' : 'on'}" role="tab" id="aba-${id}" aria-selected="${!i}" aria-controls="painelMain" tabindex="${i ? -1 : 0}" data-aba="${id}">${I[ico]}${nome}</button>`).join('')}
+            ${ABAS.map(([id, nome, ico]) => `<button class="it ${id === inicial ? 'on' : ''}" role="tab" id="aba-${id}" aria-selected="${id === inicial}" aria-controls="painelMain" tabindex="${id === inicial ? 0 : -1}" data-aba="${id}">${I[ico]}${nome}</button>`).join('')}
           </div>
           <div class="it plano">${I.pessoa}${st ? 'Salvo neste aparelho' : 'Grátis, sem conta'}</div></aside>
-        <main id="painelMain" role="tabpanel" aria-labelledby="aba-progresso">${abaPainel('progresso')}</main>
+        <main id="painelMain" role="tabpanel" aria-labelledby="aba-${inicial}">${abaPainel(inicial)}</main>
       </div>
-      <div class="abas-mobile" role="tablist" aria-label="Painel">${ABAS.map(([id, nome], i) => `<button role="tab" aria-selected="${!i}" data-aba="${id}">${nome}</button>`).join('')}</div>
+      ${pagina ? '' : `<a class="abrir-painel" href="#/painel/${inicial}">Abrir meu painel ${I.seta}</a>`}
+      <div class="abas-mobile" role="tablist" aria-label="Painel">${ABAS.map(([id, nome]) => `<button role="tab" aria-selected="${id === inicial}" data-aba="${id}">${nome}</button>`).join('')}</div>
     </div></section>`;
 }
-function ligarPainel() {
+function ligarPainel(pagina = false) {
   const main = document.getElementById('painelMain'); if (!main) return;
   const botoes = [...document.querySelectorAll('#painel [data-aba]')];
   const abrir = (aba, foco) => {
@@ -177,6 +179,8 @@ function ligarPainel() {
     main.innerHTML = abaPainel(aba);
     main.classList.remove('troca'); void main.offsetWidth; main.classList.add('troca');
     if (foco) document.getElementById(`aba-${aba}`)?.focus();
+    // on the full page each tab has its own address, so it can be linked and survives a reload
+    if (pagina && location.hash !== `#/painel/${aba}`) history.replaceState(null, '', `#/painel/${aba}`);
   };
   botoes.forEach((b) => b.onclick = () => abrir(b.dataset.aba));
   // vertical tablist: arrow keys move between tabs
@@ -489,7 +493,7 @@ function telaResultado(id, revisao) {
   const antes = anteriores.length ? anteriores[anteriores.length - 1] : null;
   const prox = simulados(prova)[sim.numero];
   app.innerHTML = `<div class="page-light"></div>
-  ${cabecalho('<a class="btn btn-glass btn-sm" href="#/">Início</a>', false)}
+  ${cabecalho('<span class="acoes-topo"><a class="btn btn-glass btn-sm" href="#/painel">Meu painel</a><a class="btn btn-glass btn-sm" href="#/">Início</a></span>', false)}
   <main class="resultado">
     <div class="nota rv"><span class="eyebrow">${esc(prova.nome)} · ${esc(sim.titulo)}${feito.acabouTempo ? ' · o tempo acabou' : ''}</span>
       <div class="v">${esc(r.nota.valor)}<small>${esc(r.nota.max)}</small></div>
@@ -502,7 +506,7 @@ function telaResultado(id, revisao) {
     </div>
     <div class="card revisar rv"><div class="k">${r.revisar.length ? 'O que revisar' : 'Nenhum assunto para revisar neste simulado'}</div>
       <ul>${r.revisar.map((x) => `<li>${esc(x.topico)} <span>${x.certas}/${x.total} · ${esc(prova.disciplinas.find((d) => d.id === x.disciplina).curto)}</span></li>`).join('')}</ul></div>
-    <div class="res-acoes"><a class="btn btn-acc" href="#/revisao/${feito.id}">Ver a correção</a><a class="btn btn-glass" href="#/simulado/${sim.id}">Refazer</a>${prox ? `<a class="btn btn-glass" href="#/simulado/${prox.id}">Próximo simulado</a>` : ''}</div>
+    <div class="res-acoes"><a class="btn btn-acc" href="#/revisao/${feito.id}">Ver a correção</a><a class="btn btn-glass" href="#/painel/revisar">O que revisar em todos os simulados</a><a class="btn btn-glass" href="#/simulado/${sim.id}">Refazer</a>${prox ? `<a class="btn btn-glass" href="#/simulado/${prox.id}">Próximo simulado</a>` : ''}</div>
   </main>`;
   ligarTopo(); ligarReveal();
 }
@@ -536,6 +540,32 @@ function telaRevisao(prova, sim, t, feito, r) {
   render();
 }
 
+// ---------------- panel page ----------------
+function telaPainel(aba) {
+  const st = estatisticas();
+  app.innerHTML = `<div class="page-light"></div>
+  ${cabecalho(`<span class="acoes-topo"><a class="btn btn-glass btn-sm" href="#/">Início</a><a class="btn btn-acc btn-sm" href="#catalogo">Fazer um simulado</a></span>`, false)}
+  <main class="pagina-painel">
+    <div class="page sec-head"><span class="eyebrow">Meu painel</span><h1 class="h2">${st ? 'Seu progresso.' : 'Seu painel começa aqui.'}<br><span class="dim">${st ? `${st.feitos} ${st.feitos === 1 ? 'simulado feito, salvo' : 'simulados feitos, salvos'} neste aparelho.` : 'Faça um simulado e ele aparece aqui.'}</span></span></h1></div>
+    ${painel(aba, true)}
+    ${st ? `<div class="page acoes-painel"><button class="btn btn-glass btn-sm" id="exportar">Baixar meu histórico</button><button class="btn btn-glass btn-sm perigo" id="zerar">Apagar meu histórico</button></div>` : ''}
+  </main>`;
+  ligarTopo(); ligarPainel(true);
+  document.getElementById('exportar')?.addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(ler(), null, 2)], { type: 'application/json' }));
+    a.download = `gabarito-historico-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  });
+  document.getElementById('zerar')?.addEventListener('click', () => {
+    const m = document.createElement('div'); m.className = 'modal'; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true');
+    m.innerHTML = `<div><h3>Apagar o histórico?</h3><p>Todas as notas, correções e o progresso deste aparelho serão apagados. Não dá para desfazer.</p><div class="acoes"><button class="btn btn-glass btn-sm" id="nao">Cancelar</button><button class="btn btn-acc btn-sm" id="sim">Apagar</button></div></div>`;
+    document.body.append(m);
+    m.querySelector('#nao').onclick = () => m.remove();
+    m.querySelector('#sim').onclick = () => { gravar({ tentativas: [], emAndamento: null }); m.remove(); telaPainel('progresso'); };
+    m.querySelector('#nao').focus();
+  });
+}
+
 // ---------------- router ----------------
 function rota() {
   limpar.forEach((f) => f()); limpar = [];
@@ -545,6 +575,7 @@ function rota() {
   if ((m = h.match(/^#\/simulado\/([\w-]+)$/))) telaSimulado(m[1]);
   else if ((m = h.match(/^#\/resultado\/(\w+)$/))) telaResultado(m[1], false);
   else if ((m = h.match(/^#\/revisao\/(\w+)$/))) telaResultado(m[1], true);
+  else if ((m = h.match(/^#\/painel(?:\/(progresso|historico|conteudo|revisar))?$/))) telaPainel(m[1] || 'progresso');
   else {
     if (!document.getElementById('inicio')) landing();
     const ancora = h.startsWith('#') && !h.startsWith('#/') ? document.getElementById(h.slice(1)) : null;

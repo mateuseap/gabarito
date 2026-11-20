@@ -50,7 +50,7 @@ Todas as questões são inéditas, escritas a partir do conteúdo oficial. O Gab
 | 🧭 **Mapa de questões** | Pular entre questões e ver o que já foi respondido |
 | 📊 **Resultado por matéria** | Nota no formato da prova, acertos por matéria ou domínio, aviso de eliminação ou de aprovação |
 | 🎯 **O que revisar** | Os assuntos do edital ou do guia oficial em que houve erro |
-| 📈 **Painel navegável** | Abas Progresso (gráfico e dias de estudo), Histórico (cada simulado com link para o resultado), Conteúdo (assuntos de cada prova) e Revisar (assuntos com erro em todas as tentativas, cada um levando à correção). Tudo no navegador; sem histórico, mostra um exemplo |
+| 📈 **Meu painel** | Página própria em `#/painel`, aberta pelo topo do site, pelo resultado de cada simulado e pela prévia na página inicial. Abas Progresso (gráfico e dias de estudo), Histórico (cada simulado com link para o resultado), Conteúdo (assuntos de cada prova) e Revisar (assuntos com erro em todas as tentativas, cada um levando à correção). Cada aba tem endereço próprio. Dá para baixar ou apagar o histórico. Tudo no navegador |
 
 <img src="docs/assets/simulado.png" width="760" alt="Tela de um simulado da AWS com cronômetro, mapa de questões e alternativas" />
 
