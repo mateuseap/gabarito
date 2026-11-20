@@ -61,7 +61,7 @@ O visual segue a referência de [heysusi.app](https://heysusi.app): fundo quase 
 - página de 1120 px, seções a cada 160 px, títulos de 64 e 40 px com peso 500;
 - cabeçalho transparente que vira uma pílula de vidro flutuante ao rolar;
 - faixa de logos em loop de 48 s com esmaecimento de 96 px nas bordas;
-- cards de recursos em linha com rolagem por encaixe e brilho que segue o cursor;
+- cards de recursos em carrossel: setas, pontos clicáveis com barra de tempo, avanço automático a cada 4,5 s que pausa ao passar o mouse e para ao navegar, arraste com o mouse e brilho que segue o cursor;
 - seções que aparecem subindo 24 px ao entrar na tela, com a curva `cubic-bezier(.32, .72, 0, 1)`.
 
 ## Adicionar provas e simulados
