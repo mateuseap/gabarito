@@ -46,7 +46,7 @@ const MASCOTE = `<svg class="mascote" viewBox="0 0 120 120" aria-hidden="true">
 function cabecalho(acao = `<a class="btn btn-acc btn-sm" href="#catalogo">Ver simulados</a>`, links = true) {
   return `<header class="topo" id="topo"><div class="barra">
     <a class="marca" href="#/">${I.marca}Gabarito</a>
-    ${links ? `<nav aria-label="Principal"><a href="#catalogo">Simulados</a><a href="#recursos">Recursos</a><a href="#como">Como funciona</a><a href="#perguntas">Perguntas</a></nav>` : ''}
+    ${links ? `<nav aria-label="Principal"><a href="#painel">Painel</a><a href="#catalogo">Simulados</a><a href="#recursos">Recursos</a><a href="#perguntas">Perguntas</a></nav>` : ''}
     ${acao}</div></header>`;
 }
 function ligarTopo() {
@@ -68,37 +68,124 @@ function estatisticas() {
 }
 const pctTxt = (x) => `${Math.round(x * 100)}%`;
 
-// ---------------- landing ----------------
+// ---------------- landing: the panel is a working mini dashboard over the local history ----------------
+const ABAS = [['progresso', 'Progresso', 'stats'], ['historico', 'Histórico', 'hist'], ['conteudo', 'Conteúdo', 'livro'], ['revisar', 'Revisar', 'alvo']];
+const dataCurta = (ms) => new Date(ms).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '');
+const EXEMPLO_HIST = [
+  { prova: 'aws-clf-c02', sim: 'Simulado 1', nota: '775/1000', pct: .75, dias: 1 },
+  { prova: 'ete-pe-2027', sim: 'Simulado 3', nota: '16/20', pct: .8, dias: 2 },
+  { prova: 'ete-pe-2027', sim: 'Simulado 2', nota: '13/20', pct: .65, dias: 4 },
+  { prova: 'ete-pe-2027', sim: 'Simulado 1', nota: '11/20', pct: .55, dias: 6 },
+];
+const EXEMPLO_REV = [['Regra de três composta', 'Matemática', 1, 3], ['Concordância', 'Português', 2, 4], ['Billing, Pricing, and Support', 'AWS', 1, 2], ['Triângulos', 'Matemática', 2, 3]];
+
+function revisarGeral() {
+  // topics across every attempt, worst first, each pointing at the latest correction where it was missed
+  const m = new Map();
+  for (const t of ler().tentativas) {
+    const prova = provaDoSimulado(t.simuladoId); if (!prova) continue;
+    for (const r of t.resultado.revisar) {
+      const k = prova.id + '|' + r.topico;
+      const x = m.get(k) || { topico: r.topico, prova, disciplina: prova.disciplinas.find((d) => d.id === r.disciplina)?.curto, certas: 0, total: 0, ultima: t };
+      x.certas += r.certas; x.total += r.total; if (t.fim >= x.ultima.fim) x.ultima = t;
+      m.set(k, x);
+    }
+  }
+  return [...m.values()].sort((a, b) => a.certas / a.total - b.certas / b.total || b.total - a.total);
+}
+
+function abaPainel(aba) {
+  const st = estatisticas(), { tentativas } = ler();
+  const card = (k, v, extra = '') => `<div class="card"><div class="k">${k}</div><div class="v">${v}${extra}</div></div>`;
+  const exemplo = st ? '' : '<span class="pill acc">Exemplo</span>';
+  if (aba === 'progresso') {
+    const serie = st ? st.pct.slice(-14) : [.42, .48, .45, .55, .52, .6, .58, .66, .63, .7, .68, .76, .74, .82];
+    const w = 640, h = 130;
+    const pts = serie.map((v, i) => [serie.length === 1 ? w / 2 : (i * w) / (serie.length - 1), h - 8 - v * (h - 20)]);
+    const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+    const calor = Array.from({ length: 26 * 5 }, (_, i) => {
+      const dia = new Date(Date.now() - (129 - i) * 864e5).toDateString();
+      const n = st ? (st.dias.has(dia) ? 4 : 0) : [0, 1, 0, 2, 3, 0, 1, 4, 2, 0, 3, 1, 0, 2, 4][(i * 7 + (i >> 3)) % 15] * (i > 40 ? 1 : i % 3 === 0 ? 1 : 0);
+      return `<b data-n="${n}"></b>`;
+    }).join('');
+    return `<div class="filtro"><span class="pill">${st ? 'Todos os simulados' : 'Últimos 30 dias'}</span>${st ? `<span class="pill acc">${st.feitos} feitos</span>` : exemplo}</div>
+      <div class="card full"><div class="k">Acertos nos simulados</div>
+        <div class="v big">${st ? pctTxt(st.melhor) : '82%'}<span class="delta">↑ ${st ? 'melhor nota' : '40 pontos'}</span></div>
+        <svg class="grafico" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a8e05f" stop-opacity=".3"/><stop offset="1" stop-color="#a8e05f" stop-opacity="0"/></linearGradient></defs>
+          <path d="${d} L${w} ${h} L0 ${h} Z" fill="url(#ga)"/><path class="linha" d="${d}" fill="none" stroke="#a8e05f" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
+        <div class="grafico-eixo"><span>${st ? 'primeiro simulado' : '14 simulados atrás'}</span><span>${st ? 'último' : 'hoje'}</span></div></div>
+      ${card('Simulados feitos', st ? st.feitos : 14, st ? '' : '<span class="delta">↑ 18%</span>')}
+      ${card('Média de acertos', st ? pctTxt(st.media) : '63%')}
+      ${card('Tempo treinando', st ? formatarTempo(st.tempo) : '7 h 40 min')}
+      <div class="card full"><div class="k">Dias de estudo</div><div class="calor">${calor}</div></div>`;
+  }
+  if (aba === 'historico') {
+    const linhas = st
+      ? [...tentativas].reverse().slice(0, 8).map((t) => { const p = provaDoSimulado(t.simuladoId), s = p && simulados(p).find((x) => x.id === t.simuladoId); return p && { p, titulo: s?.titulo || '', nota: `${t.resultado.nota.valor}${t.resultado.nota.max}`, pct: t.resultado.acertos / t.resultado.total, quando: dataCurta(t.fim), href: `#/resultado/${t.id}` }; }).filter(Boolean)
+      : EXEMPLO_HIST.map((x) => { const p = PROVAS.find((y) => y.id === x.prova); return { p, titulo: x.sim, nota: x.nota, pct: x.pct, quando: dataCurta(Date.now() - x.dias * 864e5), href: '' }; });
+    return `<div class="filtro"><span class="pill">${st ? `Últimos ${linhas.length} simulados` : 'Seus simulados aparecem aqui'}</span>${exemplo}</div>
+      <div class="card full lista-painel">${linhas.map((l) => `<${l.href ? `a href="${l.href}"` : 'div'} class="linha-painel">
+        <span class="selo-prova mini" style="--cor:${l.p.cor}">${esc(l.p.sigla)}</span>
+        <span class="nome"><b>${esc(l.p.nome)}</b><span>${esc(l.titulo)} · ${l.quando}</span></span>
+        <span class="barra-mini"><i style="width:${Math.round(l.pct * 100)}%"></i></span>
+        <span class="nota-mini">${esc(l.nota)}</span>${l.href ? `<span class="ir">${I.seta}</span>` : ''}</${l.href ? 'a' : 'div'}>`).join('')}</div>
+      ${st ? '' : `<div class="card full vazio"><span>Faça um simulado e ele entra no histórico, com a correção a um clique.</span><a class="btn btn-acc btn-sm" href="#catalogo">Escolher uma prova</a></div>`}`;
+  }
+  if (aba === 'conteudo') {
+    return `<div class="filtro"><span class="pill">${PROVAS.length} provas · ${totalQuestoes()} questões</span></div>
+      ${PROVAS.map((p) => {
+        const tops = new Map();
+        p.disciplinas.forEach((d) => d.blocos.flat().forEach((q) => tops.set(q.topico, (tops.get(q.topico) || 0) + 1)));
+        const ord = [...tops.entries()].sort((a, b) => b[1] - a[1]);
+        return `<div class="card full"><div class="cab-conteudo"><span class="selo-prova mini" style="--cor:${p.cor}">${esc(p.sigla)}</span><b>${esc(p.nome)}</b><span class="small">${simulados(p).length} simulados · ${tops.size} assuntos</span><a class="btn btn-glass btn-sm" href="#/simulado/${simulados(p)[0].id}">Começar</a></div>
+          <div class="chips">${ord.slice(0, 18).map(([t, n]) => `<span>${esc(t)} <b>${n}</b></span>`).join('')}${ord.length > 18 ? `<span>+${ord.length - 18}</span>` : ''}</div></div>`;
+      }).join('')}`;
+  }
+  const rev = st ? revisarGeral().slice(0, 6) : null;
+  const linhas = rev
+    ? rev.map((r) => ({ topico: r.topico, onde: `${r.prova.sigla} · ${r.disciplina}`, certas: r.certas, total: r.total, href: `#/revisao/${r.ultima.id}` }))
+    : EXEMPLO_REV.map(([topico, onde, certas, total]) => ({ topico, onde, certas, total, href: '' }));
+  return `<div class="filtro"><span class="pill">${st ? 'Assuntos com erro, do pior para o melhor' : 'Os assuntos em que você erra aparecem aqui'}</span>${exemplo}</div>
+    ${linhas.length ? `<div class="card full lista-painel">${linhas.map((l) => `<${l.href ? `a href="${l.href}"` : 'div'} class="linha-painel">
+      <span class="nome"><b>${esc(l.topico)}</b><span>${esc(l.onde)}</span></span>
+      <span class="barra-mini ${l.certas / l.total < .5 ? 'ruim' : ''}"><i style="width:${Math.max(4, Math.round((l.certas / l.total) * 100))}%"></i></span>
+      <span class="nota-mini">${l.certas}/${l.total}</span>${l.href ? `<span class="ir">${I.seta}</span>` : ''}</${l.href ? 'a' : 'div'}>`).join('')}</div>`
+    : '<div class="card full vazio"><span>Nenhum erro até agora. Continue assim.</span></div>'}`;
+}
+
 function painel() {
   const st = estatisticas();
-  const serie = st ? st.pct.slice(-14) : [.42, .48, .45, .55, .52, .6, .58, .66, .63, .7, .68, .76, .74, .82];
-  const w = 640, h = 130;
-  const pts = serie.map((v, i) => [serie.length === 1 ? w / 2 : (i * w) / (serie.length - 1), h - 8 - v * (h - 20)]);
-  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
-  const calor = Array.from({ length: 26 * 5 }, (_, i) => {
-    const dia = new Date(Date.now() - (129 - i) * 864e5).toDateString();
-    const n = st ? (st.dias.has(dia) ? 4 : 0) : [0, 1, 0, 2, 3, 0, 1, 4, 2, 0, 3, 1, 0, 2, 4][(i * 7 + (i >> 3)) % 15] * (i > 40 ? 1 : i % 3 === 0 ? 1 : 0);
-    return `<b data-n="${n}"></b>`;
-  }).join('');
-  const card = (k, v, extra = '') => `<div class="card"><div class="k">${k}</div><div class="v">${v}${extra}</div></div>`;
-  return `<section class="janela-sec page rv" aria-label="${st ? 'Seu progresso' : 'Exemplo do painel de progresso'}">
+  return `<section class="janela-sec page rv" id="painel" aria-label="${st ? 'Seu painel' : 'Painel de exemplo'}">
     <div class="janela"><div class="luzes"><i></i><i></i><i></i></div>
       <div class="app">
         <aside><div class="marca">${I.marca}Gabarito</div>
-          <div class="it on">${I.stats}Progresso</div><div class="it">${I.hist}Histórico</div><div class="it">${I.livro}Conteúdo</div><div class="it">${I.alvo}Revisar</div>
-          <div class="it plano">${I.pessoa}Grátis, sem conta</div></aside>
-        <main>
-          <div class="filtro"><span class="pill">${st ? 'Todos os simulados' : 'Últimos 30 dias'}</span><span class="pill acc">${st ? `${st.feitos} feitos` : 'Exemplo'}</span></div>
-          <div class="card full"><div class="k">Acertos nos simulados</div>
-            <div class="v big">${st ? pctTxt(st.melhor) : '82%'}<span class="delta">↑ ${st ? 'melhor nota' : '40 pontos'}</span></div>
-            <svg class="grafico" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="ga" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#a8e05f" stop-opacity=".3"/><stop offset="1" stop-color="#a8e05f" stop-opacity="0"/></linearGradient></defs>
-              <path d="${d} L${w} ${h} L0 ${h} Z" fill="url(#ga)"/><path class="linha" d="${d}" fill="none" stroke="#a8e05f" stroke-width="2.5" vector-effect="non-scaling-stroke"/></svg>
-            <div class="grafico-eixo"><span>${st ? 'primeiro simulado' : '14 simulados atrás'}</span><span>${st ? 'último' : 'hoje'}</span></div></div>
-          ${card('Simulados feitos', st ? st.feitos : 14, st ? '' : '<span class="delta">↑ 18%</span>')}
-          ${card('Média de acertos', st ? pctTxt(st.media) : '63%')}
-          ${card('Tempo treinando', st ? formatarTempo(st.tempo) : '7 h 40 min')}
-          <div class="card full"><div class="k">Dias de estudo</div><div class="calor">${calor}</div></div>
-        </main></div></div></section>`;
+          <div class="abas-painel" role="tablist" aria-label="Painel" aria-orientation="vertical">
+            ${ABAS.map(([id, nome, ico], i) => `<button class="it ${i ? '' : 'on'}" role="tab" id="aba-${id}" aria-selected="${!i}" aria-controls="painelMain" tabindex="${i ? -1 : 0}" data-aba="${id}">${I[ico]}${nome}</button>`).join('')}
+          </div>
+          <div class="it plano">${I.pessoa}${st ? 'Salvo neste aparelho' : 'Grátis, sem conta'}</div></aside>
+        <main id="painelMain" role="tabpanel" aria-labelledby="aba-progresso">${abaPainel('progresso')}</main>
+      </div>
+      <div class="abas-mobile" role="tablist" aria-label="Painel">${ABAS.map(([id, nome], i) => `<button role="tab" aria-selected="${!i}" data-aba="${id}">${nome}</button>`).join('')}</div>
+    </div></section>`;
+}
+function ligarPainel() {
+  const main = document.getElementById('painelMain'); if (!main) return;
+  const botoes = [...document.querySelectorAll('#painel [data-aba]')];
+  const abrir = (aba, foco) => {
+    botoes.forEach((b) => { const on = b.dataset.aba === aba; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); if (b.closest('.abas-painel')) b.tabIndex = on ? 0 : -1; });
+    main.setAttribute('aria-labelledby', `aba-${aba}`);
+    main.innerHTML = abaPainel(aba);
+    main.classList.remove('troca'); void main.offsetWidth; main.classList.add('troca');
+    if (foco) document.getElementById(`aba-${aba}`)?.focus();
+  };
+  botoes.forEach((b) => b.onclick = () => abrir(b.dataset.aba));
+  // vertical tablist: arrow keys move between tabs
+  document.querySelector('.abas-painel').addEventListener('keydown', (e) => {
+    const ids = ABAS.map((a) => a[0]), i = ids.indexOf(document.activeElement?.dataset?.aba);
+    if (i < 0) return;
+    const j = e.key === 'ArrowDown' ? (i + 1) % ids.length : e.key === 'ArrowUp' ? (i + ids.length - 1) % ids.length : e.key === 'Home' ? 0 : e.key === 'End' ? ids.length - 1 : -1;
+    if (j >= 0) { e.preventDefault(); abrir(ids[j], true); }
+  });
 }
 
 function landing() {
@@ -147,15 +234,11 @@ function landing() {
   </section>
 
   <section class="sec" id="recursos" aria-labelledby="t-rec">
-    <div class="page feats-head rv">
-      <div class="sec-head"><span class="eyebrow">Recursos</span><h2 class="h2" id="t-rec">Feito para treinar<br><span class="dim">do jeito que cai.</span></h2></div>
-      <div class="feats-ctrl" role="group" aria-label="Navegar pelos recursos">
-        <button class="seta" id="featsPrev" aria-label="Recurso anterior">${I.esq}</button>
-        <button class="seta" id="featsNext" aria-label="Próximo recurso">${I.seta}</button>
-      </div>
-    </div>
-    <div class="feats-wrap rv" data-d="1">
-      <ul class="feats" id="feats" aria-roledescription="carrossel" aria-label="Recursos">
+    <div class="page sec-head rv"><span class="eyebrow">Recursos</span><h2 class="h2" id="t-rec">Feito para treinar<br><span class="dim">do jeito que cai.</span></h2></div>
+    <div class="feats-wrap rv" data-d="1" role="region" aria-roledescription="carrossel" aria-label="Recursos">
+      <button class="seta seta-esq" id="featsPrev" aria-label="Recurso anterior">${I.esq}</button>
+      <button class="seta seta-dir" id="featsNext" aria-label="Próximo recurso">${I.seta}</button>
+      <ul class="feats" id="feats">
         ${feat(I.relogio, 'O tempo da prova real', 'O cronômetro não pausa e a prova fecha sozinha no fim, como no dia. Você aprende o seu ritmo antes de valer.', `
           <svg class="gauge" viewBox="0 0 260 170" aria-hidden="true"><path d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="14" stroke-linecap="round"/>
           <path class="arco" pathLength="1" d="M30 150a100 100 0 0 1 200 0" fill="none" stroke="#a8e05f" stroke-width="14" stroke-linecap="round"/>
@@ -175,10 +258,6 @@ function landing() {
         ${feat(I.cadeado, 'Seu progresso é seu', 'Sem conta e sem servidor: notas e histórico ficam só no seu navegador. Ninguém mais vê.', `
           <div class="cadeado"><div class="disp">${I.cadeado}</div><span>salvo só neste aparelho</span></div>`)}
       </ul>
-      <div class="page feats-pe">
-        <div class="feats-nav" id="featsNav" role="tablist" aria-label="Escolher recurso">${Array.from({ length: 6 }, (_, i) => `<button role="tab" aria-label="Recurso ${i + 1}" aria-selected="${!i}"><i></i></button>`).join('')}</div>
-        <button class="auto" id="featsAuto" aria-pressed="true"><span class="ico-pausa" aria-hidden="true"></span><span class="txt">Pausar</span></button>
-      </div>
     </div>
   </section>
 
@@ -228,7 +307,7 @@ function landing() {
     <div><h4>Projeto</h4><a href="https://github.com/mateuseap/gabarito" target="_blank" rel="noopener">GitHub</a><a href="https://github.com/mateuseap/gabarito/issues" target="_blank" rel="noopener">Sugerir uma prova</a><a href="https://github.com/mateuseap/gabarito/blob/main/LICENSE" target="_blank" rel="noopener">Licença MIT</a></div>
   </div></footer>`;
 
-  ligarTopo(); ligarReveal(); ligarFeats(); ligarAbas();
+  ligarTopo(); ligarReveal(); ligarPainel(); ligarFeats(); ligarAbas();
   // the feature clock counts down while visible, as a preview of the real one
   let s = 3600; const t = setInterval(() => { const el = document.getElementById('gaugeT'); if (el) { s = s > 0 ? s - 1 : 3600; el.textContent = formatarTempo(s * 1000); } }, 1000);
   aoSair(() => clearInterval(t));
@@ -245,54 +324,57 @@ function cartaoProva(p, melhor, i) {
 }
 const feat = (ico, t, p, demo) => `<li class="feat"><div class="demo">${demo}</div><div class="txt"><div class="t"><span class="ico">${ico}</span><h3>${t}</h3></div><p>${p}</p></div></li>`;
 
-// carousel: arrows, clickable dots, mouse drag and autoplay. Autoplay advances one card
-// every 4.5 s, pauses on hover, focus, touch or manual navigation, and stays off for reduced motion.
+// carousel: the row glides on its own in a seamless loop (cards are cloned once),
+// pauses on hover, focus or touch, and the edge arrows jump one card either way.
+// With reduced motion it does not glide; the arrows still work.
 function ligarFeats() {
-  const row = document.getElementById('feats'), nav = document.getElementById('featsNav'); if (!row) return;
-  const cards = [...row.children], dots = [...nav.children], prev = document.getElementById('featsPrev'), next = document.getElementById('featsNext'), auto = document.getElementById('featsAuto');
-  cards.forEach((c) => c.addEventListener('pointermove', (e) => { const r = c.getBoundingClientRect(); c.style.setProperty('--x', `${e.clientX - r.left}px`); c.style.setProperty('--y', `${e.clientY - r.top}px`); }));
-  const passo = () => cards[0].getBoundingClientRect().width + 20;
-  const fim = () => row.scrollLeft >= row.scrollWidth - row.clientWidth - 4;
-  // near the end the row cannot scroll a card to the left edge, so a chosen card is remembered explicitly
-  let escolhido = null;
-  const atual = () => (escolhido !== null ? escolhido : fim() ? cards.length - 1 : Math.round(row.scrollLeft / passo()));
-  const ir = (i, fixar = false) => { i = Math.max(0, Math.min(cards.length - 1, i)); escolhido = fixar ? i : null; marcar(); row.scrollTo({ left: i * passo(), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
-  const marcar = () => {
-    const i = atual();
-    dots.forEach((d, k) => { d.setAttribute('aria-selected', String(k === i)); d.classList.toggle('on', k === i); });
-    prev.disabled = i === 0; next.disabled = i === cards.length - 1;
-    cards.forEach((c, k) => c.classList.toggle('ativo', k === i));
+  const row = document.getElementById('feats'); if (!row) return;
+  const originais = [...row.children];
+  originais.forEach((c) => { const k = c.cloneNode(true); k.setAttribute('aria-hidden', 'true'); k.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id')); row.append(k); });
+  row.querySelectorAll('.feat').forEach((c) => c.addEventListener('pointermove', (e) => { const r = c.getBoundingClientRect(); c.style.setProperty('--x', `${e.clientX - r.left}px`); c.style.setProperty('--y', `${e.clientY - r.top}px`); }));
+  const passo = () => originais[0].getBoundingClientRect().width + 20;
+  const volta = () => originais.length * passo();
+  // keep the scroll inside the first copy so the loop never shows an edge
+  const normalizar = () => { const v = volta(); if (row.scrollLeft >= v) row.scrollLeft -= v; else if (row.scrollLeft < 0) row.scrollLeft += v; };
+  const reduzido = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const VEL = 38; // px per second, slow enough to read the card text
+  let pausado = false, visivel = false, animando = false, ultimo = 0, resto = 0, raf = 0;
+  const quadro = (t) => {
+    raf = requestAnimationFrame(quadro);
+    const dt = Math.min(64, t - (ultimo || t)); ultimo = t;
+    if (pausado || !visivel || animando || reduzido) return;
+    resto += (VEL * dt) / 1000;
+    const px = Math.floor(resto); if (!px) return;
+    resto -= px; row.scrollLeft += px; normalizar();
   };
-  row.addEventListener('scroll', marcar, { passive: true });
-  // a user scroll (wheel, touch, drag) drops the remembered card
-  ['wheel', 'touchmove'].forEach((ev) => row.addEventListener(ev, () => { escolhido = null; }, { passive: true }));
-  marcar();
-
-  let ligado = !matchMedia('(prefers-reduced-motion: reduce)').matches, emPausa = false, timer;
-  const mostrarAuto = () => { auto.setAttribute('aria-pressed', String(ligado)); auto.querySelector('.txt').textContent = ligado ? 'Pausar' : 'Reproduzir'; nav.classList.toggle('rodando', ligado && !emPausa); };
-  const agendar = () => { clearTimeout(timer); nav.style.setProperty('--dur', '4.5s'); mostrarAuto(); if (!ligado || emPausa) return; timer = setTimeout(() => { const i = atual(); ir(i >= cards.length - 1 ? 0 : i + 1, true); agendar(); }, 4500); };
-  const parar = () => { ligado = false; agendar(); };
-  prev.onclick = () => { parar(); ir(atual() - 1, true); };
-  next.onclick = () => { parar(); ir(atual() + 1, true); };
-  dots.forEach((d, k) => d.onclick = () => { parar(); ir(k, true); });
-  auto.onclick = () => { ligado = !ligado; agendar(); };
-  const pausa = (v) => () => { emPausa = v; agendar(); };
-  row.addEventListener('pointerenter', pausa(true)); row.addEventListener('pointerleave', pausa(false));
+  raf = requestAnimationFrame(quadro);
+  const saltar = (dir) => {
+    normalizar();
+    const alvo = (Math.round(row.scrollLeft / passo()) + dir) * passo();
+    if (alvo < 0) row.scrollLeft += volta();
+    animando = true;
+    row.scrollTo({ left: Math.max(0, alvo < 0 ? alvo + volta() : alvo), behavior: reduzido ? 'auto' : 'smooth' });
+    clearTimeout(saltar.t); saltar.t = setTimeout(() => { animando = false; normalizar(); }, 650);
+  };
+  document.getElementById('featsPrev').onclick = () => saltar(-1);
+  document.getElementById('featsNext').onclick = () => saltar(1);
+  const wrap = row.parentElement;
+  const pausa = (v) => () => { pausado = v; ultimo = 0; };
+  wrap.addEventListener('pointerenter', pausa(true)); wrap.addEventListener('pointerleave', pausa(false));
   row.addEventListener('focusin', pausa(true)); row.addEventListener('focusout', pausa(false));
-  row.addEventListener('touchstart', parar, { passive: true });
-  row.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') { parar(); ir(atual() + 1, true); } if (e.key === 'ArrowLeft') { parar(); ir(atual() - 1, true); } });
-  // only run while the section is on screen
-  const io = new IntersectionObserver(([e]) => { emPausa = !e.isIntersecting; agendar(); }, { threshold: .35 });
+  row.addEventListener('touchstart', pausa(true), { passive: true });
+  row.addEventListener('touchend', () => setTimeout(pausa(false), 2500), { passive: true });
+  row.addEventListener('scroll', () => { if (!animando) normalizar(); }, { passive: true });
+  row.addEventListener('keydown', (e) => { if (e.key === 'ArrowRight') saltar(1); if (e.key === 'ArrowLeft') saltar(-1); });
+  const io = new IntersectionObserver(([e]) => { visivel = e.isIntersecting; }, { threshold: .2 });
   io.observe(row);
-  aoSair(() => { clearTimeout(timer); io.disconnect(); });
-
-  // drag to scroll with the mouse, like the reference; snapping is off while dragging
-  let x0 = 0, s0 = 0, arrastando = false, moveu = false;
-  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; escolhido = null; arrastando = true; moveu = false; x0 = e.clientX; s0 = row.scrollLeft; row.style.scrollSnapType = 'none'; row.style.scrollBehavior = 'auto'; });
-  const mover = (e) => { if (!arrastando) return; if (Math.abs(e.clientX - x0) > 4) { moveu = true; row.classList.add('arrastando'); } row.scrollLeft = s0 - (e.clientX - x0); };
-  const soltar = () => { if (!arrastando) return; arrastando = false; row.classList.remove('arrastando'); row.style.scrollBehavior = ''; if (moveu) { parar(); const i = atual(); row.style.scrollSnapType = ''; ir(i); } else row.style.scrollSnapType = ''; };
+  // drag with the mouse
+  let x0 = 0, s0 = 0, arrastando = false;
+  row.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'mouse') return; arrastando = true; x0 = e.clientX; s0 = row.scrollLeft; });
+  const mover = (e) => { if (!arrastando) return; if (Math.abs(e.clientX - x0) > 4) row.classList.add('arrastando'); row.scrollLeft = s0 - (e.clientX - x0); normalizar(); };
+  const soltar = () => { if (!arrastando) return; arrastando = false; row.classList.remove('arrastando'); };
   addEventListener('pointermove', mover); addEventListener('pointerup', soltar);
-  aoSair(() => { removeEventListener('pointermove', mover); removeEventListener('pointerup', soltar); });
+  aoSair(() => { cancelAnimationFrame(raf); io.disconnect(); removeEventListener('pointermove', mover); removeEventListener('pointerup', soltar); });
 }
 function ligarAbas() {
   document.querySelectorAll('.abas button').forEach((b) => b.onclick = () => {

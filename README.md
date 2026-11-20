@@ -50,7 +50,7 @@ Todas as questões são inéditas, escritas a partir do conteúdo oficial. O Gab
 | 🧭 **Mapa de questões** | Pular entre questões e ver o que já foi respondido |
 | 📊 **Resultado por matéria** | Nota no formato da prova, acertos por matéria ou domínio, aviso de eliminação ou de aprovação |
 | 🎯 **O que revisar** | Os assuntos do edital ou do guia oficial em que houve erro |
-| 📈 **Progresso local** | Melhor nota, histórico e dias de estudo, tudo no navegador |
+| 📈 **Painel navegável** | Abas Progresso (gráfico e dias de estudo), Histórico (cada simulado com link para o resultado), Conteúdo (assuntos de cada prova) e Revisar (assuntos com erro em todas as tentativas, cada um levando à correção). Tudo no navegador; sem histórico, mostra um exemplo |
 
 <img src="docs/assets/simulado.png" width="760" alt="Tela de um simulado da AWS com cronômetro, mapa de questões e alternativas" />
 
@@ -61,7 +61,7 @@ O visual segue a referência de [heysusi.app](https://heysusi.app): fundo quase 
 - página de 1120 px, seções a cada 160 px, títulos de 64 e 40 px com peso 500;
 - cabeçalho transparente que vira uma pílula de vidro flutuante ao rolar;
 - faixa de logos em loop de 48 s com esmaecimento de 96 px nas bordas;
-- cards de recursos em carrossel: setas, pontos clicáveis com barra de tempo, avanço automático a cada 4,5 s que pausa ao passar o mouse e para ao navegar, arraste com o mouse e brilho que segue o cursor;
+- cards de recursos em carrossel contínuo: desliza sozinho em loop, pausa ao passar o mouse, com setas nas bordas, arraste com o mouse e brilho que segue o cursor;
 - seções que aparecem subindo 24 px ao entrar na tela, com a curva `cubic-bezier(.32, .72, 0, 1)`.
 
 ## Adicionar provas e simulados
